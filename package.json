@@ -1,0 +1,26 @@
+{
+  "name": "bizflow-enterprise",
+  "version": "1.0.0",
+  "description": "BizFlow Enterprise - Monorepo for API and UI",
+  "private": true,
+  "scripts": {
+    "install": "pnpm install",
+    "api:dev": "pnpm -F bizflow-api start:dev",
+    "api:build": "pnpm -F bizflow-api build",
+    "api:test": "pnpm -F bizflow-api test",
+    "ui:start": "pnpm -F bizflow-ui start",
+    "ui:build": "pnpm -F bizflow-ui build",
+    "ui:test": "pnpm -F bizflow-ui test",
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel start:dev",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
