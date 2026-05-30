@@ -26,6 +26,9 @@ export class BranchesService extends BaseService<BranchDocument> {
     organizationId: string,
     userId: string,
   ): Promise<BranchDocument> {
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required to create a branch');
+    }
     // Check if code already exists in this organization
     const existingCode = await this.branchesRepository.findByCode(
       createDto.code,
@@ -42,6 +45,15 @@ export class BranchesService extends BaseService<BranchDocument> {
       organizationId: new Types.ObjectId(organizationId),
       code: createDto.code.toUpperCase(),
     };
+
+    // Defensive: ensure we don't pass an explicit _id value from the client
+    if ((branchData as any)._id !== undefined) {
+      delete (branchData as any)._id;
+    }
+
+    // Log for debugging when running locally — helps diagnose "document must have an _id" issues
+    // eslint-disable-next-line no-console
+    console.log('[BranchesService] creating branch:', { branchData });
 
     return this.repository.create(branchData, userId);
   }
@@ -160,6 +172,13 @@ export class BranchesService extends BaseService<BranchDocument> {
     }
 
     return this.repository.updateById(branchId, updateDto, currentUserId);
+  }
+
+  /**
+   * Soft delete branch
+   */
+  async softDelete(branchId: string, currentUserId?: string): Promise<any> {
+    return this.delete(branchId, currentUserId);
   }
 
   /**

@@ -19,7 +19,11 @@ export class UsersService extends BaseService<UserDocument> {
   /**
    * Create user with password hashing
    */
-  async createUser(createUserDto: CreateUserDto, userId?: string): Promise<any> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    userId?: string,
+    currentOrganizationId?: string,
+  ): Promise<any> {
     // Check if user already exists
     const existingUser = await this.usersRepository.findByEmail(createUserDto.email);
     if (existingUser) {
@@ -33,7 +37,12 @@ export class UsersService extends BaseService<UserDocument> {
       ...createUserDto,
       password: hashedPassword,
       email: createUserDto.email.toLowerCase(),
+      organizationId: createUserDto.organizationId || currentOrganizationId,
     };
+
+    if (!userData.organizationId) {
+      throw new BadRequestException('organizationId is required');
+    }
 
     const user = await this.repository.create(userData, userId);
 
@@ -123,6 +132,14 @@ export class UsersService extends BaseService<UserDocument> {
     }
 
     const user = await this.repository.updateById(userId, updateDto, currentUserId);
+    return this.sanitizeUser(user);
+  }
+
+  /**
+   * Soft delete user
+   */
+  async softDelete(userId: string, currentUserId?: string): Promise<any> {
+    const user = await this.delete(userId, currentUserId);
     return this.sanitizeUser(user);
   }
 

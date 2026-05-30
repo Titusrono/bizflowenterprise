@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
   // Enable CORS for local development so the UI dev server can call the API
   app.enableCors({
     origin: process.env.CORS_ORIGIN ?? true,

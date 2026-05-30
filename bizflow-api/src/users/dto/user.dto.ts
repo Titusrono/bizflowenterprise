@@ -25,6 +25,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(['super_admin', 'admin', 'manager', 'user'])
   role?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @IsOptional()
+  @IsString()
+  branchId?: string;
 }
 
 export class UpdateUserDto {
@@ -59,6 +67,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(['light', 'dark'])
   theme?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @IsOptional()
+  @IsString()
+  branchId?: string;
 }
 
 export class UserResponseDto {

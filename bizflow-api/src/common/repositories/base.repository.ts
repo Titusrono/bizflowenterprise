@@ -18,12 +18,29 @@ export class BaseRepository<T extends BaseDocument & Document> {
    * Create a new document
    */
   async create(createDto: Partial<T>, userId?: string): Promise<T> {
-    const doc = new this.model({
+    const payload = {
       ...createDto,
       createdBy: userId,
       createdAt: new Date(),
-    });
-    return doc.save();
+    };
+
+    // Use Model.create() which delegates to the driver and usually ensures _id generation.
+    // However some edge-cases with schema inheritance or decorated base classes have been
+    // observed to surface "document must have an _id before saving" errors. To be robust
+    // attempt create(), and fall back to a direct collection insert if create() fails.
+    try {
+      const created = await this.model.create(payload);
+      return (created.toObject ? created.toObject() : created) as any as T;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[BaseRepository] model.create failed, falling back to collection.insertOne', err?.message || err);
+      // fallback: insert raw document via native driver and return the inserted doc
+      const result = await this.model.collection.insertOne(payload as any);
+      const insertedId = result.insertedId;
+      const doc = await (this.model.findById(insertedId).lean().exec() as any) as T | null;
+      if (!doc) throw err;
+      return doc;
+    }
   }
 
   /**

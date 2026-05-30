@@ -158,6 +158,13 @@ export class OrganizationsService extends BaseService<OrganizationDocument> {
   }
 
   /**
+   * Soft delete organization
+   */
+  async softDelete(organizationId: string, currentUserId?: string): Promise<any> {
+    return this.delete(organizationId, currentUserId);
+  }
+
+  /**
    * Get members count
    */
   async getMembersCount(organizationId: string): Promise<number> {
