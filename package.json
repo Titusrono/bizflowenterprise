@@ -4,10 +4,10 @@
   "description": "BizFlow Enterprise - Monorepo for API and UI",
   "private": true,
   "scripts": {
-    "install": "pnpm install",
     "api:dev": "pnpm -F bizflow-api start:dev",
     "api:build": "pnpm -F bizflow-api build",
     "api:test": "pnpm -F bizflow-api test",
+    "db:seed": "pnpm -F bizflow-api db:seed",
     "ui:start": "pnpm -F bizflow-ui start",
     "ui:build": "pnpm -F bizflow-ui build",
     "ui:test": "pnpm -F bizflow-ui test",

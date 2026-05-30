@@ -1,0 +1,120 @@
+<div class="auth-page" [class.dark]="isDarkMode()">
+  <button type="button" class="theme-toggle" (click)="toggleTheme()" title="Toggle dark mode">
+    <svg *ngIf="!isDarkMode()" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg *ngIf="isDarkMode()" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+
+  <div class="auth-card split">
+    <div class="promo">
+      <div class="promo-inner">
+        <img class="promo-logo" [src]="branding.logo.path" [alt]="branding.logo.alt" />
+        <h2>Create your account and start managing your workspace</h2>
+        <p class="lead">Set up your organization, invite your team, and keep operations connected from day one.</p>
+
+        <ul class="features">
+          <li>
+            <strong>Organization first</strong>
+            <span>Create your company profile, then manage users and branches from one place.</span>
+          </li>
+          <li>
+            <strong>Ready for teams</strong>
+            <span>Invite teammates and assign access without reworking the setup later.</span>
+          </li>
+          <li>
+            <strong>Protected from the start</strong>
+            <span>Secure authentication and role-based access are included from account creation.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-panel">
+      <div class="form-inner">
+        <!-- Step 1: Account Information -->
+        <div *ngIf="currentStep() === 1" class="step-container">
+          <h3>Get Started</h3>
+
+          <form [formGroup]="registerForm" (ngSubmit)="goToNextStep()">
+            <label>
+              First Name
+              <input type="text" formControlName="firstName" placeholder="John" />
+            </label>
+
+            <label>
+              Last Name
+              <input type="text" formControlName="lastName" placeholder="Doe" />
+            </label>
+
+            <label>
+              Email Address
+              <input type="email" formControlName="email" placeholder="you@example.com" />
+            </label>
+
+            <label>
+              Organization Name
+              <input type="text" formControlName="organizationName" placeholder="Your Company" />
+            </label>
+
+            <div class="error-message" *ngIf="error()">{{ error() }}</div>
+
+            <button type="submit" class="primary">
+              Next Step
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <span>Already have an account? <a routerLink="/auth/login">Sign in here</a></span>
+          </div>
+        </div>
+
+        <!-- Step 2: Password Setup -->
+        <div *ngIf="currentStep() === 2" class="step-container">
+          <h3>Set Your Password</h3>
+
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <label>
+              Password
+              <input type="password" formControlName="password" placeholder="••••••••" />
+            </label>
+
+            <label>
+              Confirm Password
+              <input type="password" formControlName="confirmPassword" placeholder="••••••••" />
+            </label>
+
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="agreeTerms" />
+              <span>I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></span>
+            </label>
+
+            <div class="error-message" *ngIf="error()">{{ error() }}</div>
+
+            <button type="submit" class="primary" [disabled]="isLoading()">
+              {{ isLoading() ? 'Creating account...' : 'Create Account' }}
+            </button>
+
+            <button type="button" class="secondary" (click)="goToPreviousStep()">
+              Back
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <span>Already have an account? <a routerLink="/auth/login">Sign in here</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
