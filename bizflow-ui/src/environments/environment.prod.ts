@@ -9,7 +9,7 @@ export const environment = {
   },
   theme: {
     storageKey: 'theme_preference',
-    defaultTheme: 'light',
+    defaultTheme: 'dark',
   },
   logging: {
     enabled: false,

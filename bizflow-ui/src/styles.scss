@@ -17,7 +17,7 @@
   }
 
   .dark body {
-    @apply bg-neutral-950 text-white;
+    @apply bg-[#09111f] text-[#cbd5e1];
   }
 
   h1 {
@@ -106,8 +106,8 @@
     @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100 focus:ring-primary-500;
   }
 
-  .btn-ghost.dark {
-    @apply text-white hover:bg-neutral-800;
+  .dark .btn-ghost {
+    @apply text-[#cbd5e1] hover:bg-[#1a2540] dark:hover:bg-[#243254];
   }
 
   .btn-sm {
@@ -127,11 +127,11 @@
   }
 
   .dark .card {
-    @apply bg-neutral-900 shadow-lg hover:shadow-xl;
+    @apply bg-[#0f1829] shadow-lg hover:shadow-xl border border-[#1e293b];
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-neutral-200 dark:border-neutral-800;
+    @apply px-6 py-4 border-b border-neutral-200 dark:border-[#1e293b];
   }
 
   .card-body {
@@ -139,7 +139,7 @@
   }
 
   .card-footer {
-    @apply px-6 py-4 border-t border-neutral-200 bg-neutral-50 dark:bg-neutral-800 dark:border-neutral-700;
+    @apply px-6 py-4 border-t border-neutral-200 bg-neutral-50 dark:bg-[#0a1220] dark:border-[#1e293b];
   }
 
   .badge {
@@ -167,7 +167,7 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-900 transition-colors duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white;
+    @apply w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-900 transition-colors duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:bg-[#1a2540] dark:border-[#334155] dark:text-white placeholder-neutral-400 dark:placeholder-[#94a3b8];
   }
 
   .input-field.error {
@@ -211,23 +211,23 @@
   }
 
   .table thead {
-    @apply bg-neutral-100 dark:bg-neutral-800;
+    @apply bg-neutral-100 dark:bg-[#0a1220];
   }
 
   .table th {
-    @apply px-4 py-3 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300;
+    @apply px-4 py-3 text-left text-sm font-semibold text-neutral-700 dark:text-[#cbd5e1];
   }
 
   .table td {
-    @apply px-4 py-3 text-sm border-b border-neutral-200 dark:border-neutral-700;
+    @apply px-4 py-3 text-sm border-b border-neutral-200 dark:border-[#1e293b] dark:text-[#cbd5e1];
   }
 
   .table tbody tr:hover {
-    @apply bg-neutral-50 dark:bg-neutral-900;
+    @apply bg-neutral-50 dark:bg-[#1a2540];
   }
 
   .loading-skeleton {
-    @apply bg-neutral-200 dark:bg-neutral-700 animate-pulse;
+    @apply bg-neutral-200 dark:bg-[#1a2540] animate-pulse;
   }
 
   .gap-xs {
@@ -261,7 +261,7 @@
   }
 
   .dark .scrollbar-thin {
-    scrollbar-color: rgb(107, 114, 128) rgb(31, 41, 55);
+    scrollbar-color: rgb(107, 114, 128) rgb(15, 24, 41);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -274,7 +274,7 @@
   }
 
   .dark .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgb(31, 41, 55);
+    background: rgb(15, 24, 41);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
@@ -282,8 +282,17 @@
     border-radius: 3px;
   }
 
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(107, 114, 128);
+    border-radius: 3px;
+  }
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgb(107, 114, 128);
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(148, 163, 184);
   }
 
   .flex-center {

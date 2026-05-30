@@ -10,7 +10,7 @@ import { User } from '../../core/models';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <header class="sticky top-0 z-30 w-full bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
+    <header class="sticky top-0 z-30 w-full bg-white dark:bg-[#0f1829] border-b border-neutral-200 dark:border-[#1e293b] transition-colors duration-300">
       <div class="grid w-full grid-cols-[1fr_auto_1fr] items-center h-16 md:h-20 px-4 sm:px-6 lg:px-8 gap-4">
         <div class="justify-self-start">
           <h2 class="text-lg md:text-2xl font-bold text-neutral-900 dark:text-white truncate">
@@ -18,12 +18,12 @@ import { User } from '../../core/models';
           </h2>
         </div>
 
-        <div class="hidden sm:flex justify-self-center w-full max-w-md items-center gap-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2">
+        <div class="hidden sm:flex justify-self-center w-full max-w-md items-center gap-2 bg-neutral-100 dark:bg-[#1a2540] rounded-lg px-3 py-2">
             <i class="bi bi-search text-neutral-400"></i>
             <input
               type="text"
               placeholder="Search..."
-              class="bg-transparent border-0 focus:outline-none focus:ring-0 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 w-full"
+              class="bg-transparent border-0 focus:outline-none focus:ring-0 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-[#94a3b8] w-full"
             />
         </div>
 
@@ -31,14 +31,14 @@ import { User } from '../../core/models';
           <button
             type="button"
             (click)="toggleTheme()"
-            class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors dark:text-[#cbd5e1]"
             [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
             aria-label="Toggle theme"
           >
             <i class="bi text-xl" [ngClass]="isDarkMode() ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
           </button>
 
-          <button class="relative p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors" aria-label="Notifications">
+          <button class="relative p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors dark:text-[#cbd5e1]" aria-label="Notifications">
             <i class="bi bi-bell-fill text-lg"></i>
             <span
               *ngIf="notifications() > 0"
@@ -48,7 +48,7 @@ import { User } from '../../core/models';
             </span>
           </button>
 
-          <button class="relative p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors" aria-label="Messages">
+          <button class="relative p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors dark:text-[#cbd5e1]" aria-label="Messages">
             <i class="bi bi-chat-dots-fill text-lg"></i>
             <span
               *ngIf="messages() > 0"
@@ -58,10 +58,10 @@ import { User } from '../../core/models';
             </span>
           </button>
 
-          <div class="hidden md:block h-6 w-px bg-neutral-200 dark:bg-neutral-700"></div>
+          <div class="hidden md:block h-6 w-px bg-neutral-200 dark:bg-[#334155]"></div>
 
           <div class="relative" (click)="toggleUserMenu()">
-            <button class="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+            <button class="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors dark:text-[#cbd5e1]">
               <span class="hidden md:block text-sm font-medium text-neutral-900 dark:text-white">
                 {{ currentUser()?.firstName }}
               </span>
@@ -70,31 +70,31 @@ import { User } from '../../core/models';
 
             <div
               *ngIf="userMenuOpen()"
-              class="absolute right-0 mt-2 w-48 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden animate-slide-down"
+              class="absolute right-0 mt-2 w-48 bg-white dark:bg-[#0f1829] rounded-lg shadow-lg border border-neutral-200 dark:border-[#1e293b] overflow-hidden animate-slide-down"
             >
-              <div class="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+              <div class="px-4 py-3 border-b border-neutral-200 dark:border-[#1e293b]">
                 <p class="text-sm font-medium text-neutral-900 dark:text-white">
                   {{ currentUser()?.firstName }} {{ currentUser()?.lastName }}
                 </p>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ currentUser()?.email }}</p>
+                <p class="text-xs text-neutral-500 dark:text-[#94a3b8]">{{ currentUser()?.email }}</p>
               </div>
 
               <nav class="flex flex-col">
                 <button
                   (click)="navigateTo('/profile')"
-                  class="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-left"
+                  class="px-4 py-2 text-sm text-neutral-700 dark:text-[#cbd5e1] hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors text-left"
                 >
                   <i class="bi bi-person-fill me-2"></i>Profile
                 </button>
                 <button
                   (click)="navigateTo('/settings')"
-                  class="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-left"
+                  class="px-4 py-2 text-sm text-neutral-700 dark:text-[#cbd5e1] hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors text-left"
                 >
                   <i class="bi bi-gear-fill me-2"></i>Settings
                 </button>
                 <button
                   (click)="logout()"
-                  class="px-4 py-2 text-sm text-danger-600 dark:text-danger-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-left border-t border-neutral-200 dark:border-neutral-700"
+                  class="px-4 py-2 text-sm text-danger-600 dark:text-danger-400 hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors text-left border-t border-neutral-200 dark:border-[#1e293b]"
                 >
                   <i class="bi bi-box-arrow-right me-2"></i>Logout
                 </button>
