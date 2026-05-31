@@ -146,9 +146,11 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       {
         sub: user._id,
+        userId: user._id,
         email: user.email,
         role: user.role,
         organizationId: user.organizationId,
+        branchId: user.branchId,
       },
       {
         expiresIn: '24h',

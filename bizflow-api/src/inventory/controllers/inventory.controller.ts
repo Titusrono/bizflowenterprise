@@ -33,50 +33,69 @@ export class InventoryController {
 
   @Get()
   async findAll(
+    @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
   ) {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
+    const orgId = req.user?.organizationId;
+    const branchId = req.user?.branchId || null;
 
-    const filter: any = search
-      ? {
-          $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { sku: { $regex: search, $options: 'i' } },
-            { category: { $regex: search, $options: 'i' } },
-          ],
-        }
-      : {};
+    const filter: any = {
+      organizationId: orgId,
+      ...(branchId ? { branchId } : {}),
+      ...(search
+        ? {
+            $or: [
+              { name: { $regex: search, $options: 'i' } },
+              { sku: { $regex: search, $options: 'i' } },
+              { category: { $regex: search, $options: 'i' } },
+            ],
+          }
+        : {}),
+    };
 
     return this.inventoryService.getAllPaginated(filter, pageNum, limitNum);
   }
 
   @Get('stats/summary')
-  async getStatistics() {
-    const all = await this.inventoryService.count();
-    const active = await this.inventoryService.count({ status: 'active' });
-    const lowStock = await this.inventoryService.count({ quantity: { $lte: 10 } } as any);
-    const outOfStock = await this.inventoryService.count({ quantity: 0 } as any);
+  async getStatistics(@Req() req: any) {
+    const orgId = req.user?.organizationId;
+    const branchId = req.user?.branchId || null;
 
-    return { total: all, active, lowStock, outOfStock };
+    return this.inventoryService.getOrganizationStats(orgId, branchId);
   }
 
   @Get('organization/:organizationId/stats/summary')
-  async getOrganizationStatistics(@Param('organizationId') organizationId: string) {
-    return this.inventoryService.getOrganizationStats(organizationId);
+  async getOrganizationStatistics(
+    @Param('organizationId') organizationId: string,
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.inventoryService.getOrganizationStats(
+      organizationId,
+      branchId || req.user?.branchId || null,
+    );
   }
 
   @Get('organization/:organizationId')
   async getInventoryByOrganization(
     @Param('organizationId') organizationId: string,
+    @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('branchId') branchId?: string,
   ) {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
-    return this.inventoryService.getInventoryByOrganization(organizationId, pageNum, limitNum);
+    return this.inventoryService.getInventoryByOrganization(
+      organizationId,
+      branchId || req.user?.branchId || null,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get(':id')

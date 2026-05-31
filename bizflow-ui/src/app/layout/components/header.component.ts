@@ -1,9 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { ScopeService } from '../../core/services/scope.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { User } from '../../core/models';
+import { Branch, BranchesService } from '../../core/services/branches.service';
+import { User, UserRole } from '../../core/models';
 
 @Component({
   selector: 'app-header',
@@ -28,6 +31,16 @@ import { User } from '../../core/models';
         </div>
 
         <div class="justify-self-end flex items-center gap-2 md:gap-4">
+          <div class="hidden lg:flex items-center gap-2">
+            <select
+              class="input-field bg-neutral-100 dark:bg-[#141f38] text-neutral-800 dark:text-neutral-100"
+              [value]="selectedBranchId()"
+              (change)="onBranchChange($any($event.target).value)"
+            >
+              <option *ngIf="branches().length === 0" value="" disabled>No branches available</option>
+              <option *ngFor="let branch of branches()" [value]="branch._id">{{ branch.name }}</option>
+            </select>
+          </div>
           <button
             type="button"
             (click)="toggleTheme()"
@@ -113,23 +126,70 @@ export class HeaderComponent implements OnInit {
   messages = signal(2);
   userMenuOpen = signal(false);
   currentUser = signal<User | null>(null);
+  branches = signal<Branch[]>([]);
+  selectedBranchId = signal('');
+  readonly UserRole = UserRole;
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private scopeService: ScopeService,
+    private branchesService: BranchesService,
   ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
+      if (user) {
+        void this.initializeScope(user);
+      }
     });
+
+    this.scopeService.selectedBranchId$.subscribe((branchId) => {
+      if (branchId && branchId !== this.selectedBranchId()) {
+        this.selectedBranchId.set(branchId);
+      }
+    });
+
     this.updatePageTitle();
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.updatePageTitle();
       }
     });
+  }
+
+  private async initializeScope(user: User): Promise<void> {
+    const organizationId = this.scopeService.getSelectedOrganizationId() || user.organizationId || '';
+
+    await this.loadBranches(user);
+
+    const branchId = this.scopeService.getSelectedBranchId() || user.branchId || this.branches()[0]?._id || '';
+    if (branchId) {
+      this.selectedBranchId.set(branchId);
+      this.scopeService.setBranchId(branchId);
+    }
+  }
+
+  private async loadBranches(user: User): Promise<void> {
+    try {
+      let branchResponse: Branch[] = [];
+      if (user.role === UserRole.SUPER_ADMIN) {
+        const response = await firstValueFrom(this.branchesService.getAllBranches(1, 1000));
+        branchResponse = response.data;
+      } else if (user.organizationId) {
+        branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(user.organizationId));
+      }
+
+      this.branches.set(branchResponse);
+      if (!this.selectedBranchId() && this.branches().length) {
+        this.selectedBranchId.set(this.branches()[0]._id);
+        this.scopeService.setBranchId(this.branches()[0]._id);
+      }
+    } catch {
+      this.branches.set([]);
+    }
   }
 
   private updatePageTitle(): void {
@@ -140,6 +200,8 @@ export class HeaderComponent implements OnInit {
       users: 'Users',
       organizations: 'Organizations',
       branches: 'Branches',
+      inventory: 'Inventory',
+      restocks: 'Restocks',
       analytics: 'Analytics',
       reports: 'Reports',
       settings: 'Settings',
@@ -151,6 +213,11 @@ export class HeaderComponent implements OnInit {
 
   toggleUserMenu(): void {
     this.userMenuOpen.update((v) => !v);
+  }
+
+  onBranchChange(branchId: string): void {
+    this.selectedBranchId.set(branchId);
+    this.scopeService.setBranchId(branchId);
   }
 
   toggleTheme(): void {

@@ -7,13 +7,15 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { BranchesModule } from './branches/branches.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { RestocksModule } from './restocks/restocks.module';
 import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env.local', '.env'],
     }),
     MongooseModule.forRootAsync({
       useFactory: async (configService: ConfigService) => ({
@@ -28,6 +30,8 @@ import { CommonModule } from './common/common.module';
     UsersModule,
     OrganizationsModule,
     BranchesModule,
+    InventoryModule,
+    RestocksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

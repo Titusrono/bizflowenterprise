@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { UserRole } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
+import { ScopeService } from '../../../core/services/scope.service';
 import {
   OrganizationsService,
   Organization,
@@ -67,7 +68,6 @@ type ModalMode = 'create' | 'edit';
             <div class="space-y-1">
               <label class="text-sm text-neutral-500 dark:text-neutral-400">Branch</label>
               <select class="input-field" [value]="scopeBranchId()" (change)="onBranchScopeChange($any($event.target).value)">
-                <option value="">All branches</option>
                 <option *ngFor="let b of headerBranches()" [value]="b._id">{{ b.name }} ({{ b.code }})</option>
               </select>
             </div>
@@ -118,7 +118,6 @@ type ModalMode = 'create' | 'edit';
               [value]="scopeBranchId()"
               (change)="onBranchScopeChange($any($event.target).value)"
             >
-              <option value="">All branches</option>
               <option *ngFor="let branch of branchOptions()" [value]="branch._id">
                 {{ branch.name }} ({{ branch.code }})
               </option>
@@ -438,6 +437,7 @@ export class ModulePageComponent implements OnInit {
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private authService: AuthService,
+    private scopeService: ScopeService,
     private organizationsService: OrganizationsService,
     private branchesService: BranchesService,
     private usersService: UsersService,
@@ -490,7 +490,9 @@ export class ModulePageComponent implements OnInit {
     this.currentUser.set(this.authService.getCurrentUser());
 
     if (this.isScopedModule()) {
-      this.scopeOrganizationId.set(this.currentUser()?.organizationId || '');
+      const orgId = this.currentUser()?.organizationId || '';
+      this.scopeOrganizationId.set(orgId);
+      this.scopeService.setOrganizationId(orgId);
     }
 
     // load header branches (super-admin sees all, others see org-specific)
@@ -513,6 +515,11 @@ export class ModulePageComponent implements OnInit {
         const response = await firstValueFrom(this.branchesService.getActiveBranches(orgId));
         this.headerBranches.set(response || []);
       }
+
+      if (!this.scopeBranchId() && this.headerBranches().length) {
+        this.scopeBranchId.set(this.currentUser()?.branchId || this.headerBranches()[0]._id);
+      }
+      this.scopeService.setBranchId(this.scopeBranchId());
     } catch (err) {
       this.headerBranches.set([]);
     }
@@ -621,12 +628,15 @@ export class ModulePageComponent implements OnInit {
   onOrganizationScopeChange(organizationId: string): void {
     this.scopeOrganizationId.set(organizationId);
     this.scopeBranchId.set('');
+    this.scopeService.setOrganizationId(organizationId);
+    this.scopeService.setBranchId('');
     void this.loadHeaderBranches(organizationId);
     void this.loadModuleData();
   }
 
   onBranchScopeChange(branchId: string): void {
     this.scopeBranchId.set(branchId);
+    this.scopeService.setBranchId(branchId);
     void this.loadModuleData();
   }
 

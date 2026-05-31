@@ -7,7 +7,6 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { PartialType } from '@nestjs/mapped-types';
 import { DocumentStatus } from '../../common/schemas/base.schema';
 
 export class CreateInventoryDto {
@@ -67,4 +66,65 @@ export class CreateInventoryDto {
   status?: DocumentStatus;
 }
 
-export class UpdateInventoryDto extends PartialType(CreateInventoryDto) {}
+export class UpdateInventoryDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  sku?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  category?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  quantity?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  unitPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  reorderLevel?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  location?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @IsOptional()
+  @IsString()
+  branchId?: string;
+
+  @IsOptional()
+  @IsEnum(DocumentStatus)
+  status?: DocumentStatus;
+}

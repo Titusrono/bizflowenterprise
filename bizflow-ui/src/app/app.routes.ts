@@ -5,6 +5,8 @@ import { RegisterComponent } from './features/auth/register/component/register.c
 import { DashboardComponent } from './features/dashboard/pages/dashboard.component';
 import { AuthenticatedShellComponent } from './layout/components/authenticated-shell.component';
 import { ModulePageComponent } from './features/shared/pages/module-page.component';
+import { InventoryComponent } from './features/inventory/pages/inventory.component';
+import { RestocksComponent } from './features/restocks/pages/restocks.component';
 
 export const routes: Routes = [
   {
@@ -33,6 +35,14 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponent,
+      },
+      {
+        path: 'inventory',
+        component: InventoryComponent,
+      },
+      {
+        path: 'restocks',
+        component: RestocksComponent,
       },
       {
         path: 'users',

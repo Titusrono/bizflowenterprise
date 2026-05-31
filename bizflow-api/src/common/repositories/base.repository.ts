@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Model, Document, UpdateQuery, QueryOptions } from 'mongoose';
+import { Model, Document, UpdateQuery, QueryOptions, Types } from 'mongoose';
 import { BaseDocument } from '../schemas/base.schema';
 
 // Type alias for filter queries to work with mongoose v9+
@@ -20,6 +20,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
   async create(createDto: Partial<T>, userId?: string): Promise<T> {
     const payload = {
       ...createDto,
+      isDeleted: false,
       createdBy: userId,
       createdAt: new Date(),
     };
@@ -60,7 +61,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
    */
   async findAll(filter: Filter<T> = {}): Promise<T[]> {
     return (this.model
-      .find({ ...filter, isDeleted: false })
+      .find({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] })
       .sort({ createdAt: -1 })
       .lean()
       .exec() as any) as T[];
@@ -77,13 +78,13 @@ export class BaseRepository<T extends BaseDocument & Document> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       (this.model
-        .find({ ...filter, isDeleted: false })
+        .find({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] })
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
         .lean()
         .exec() as any) as T[],
-      this.model.countDocuments({ ...filter, isDeleted: false }),
+      this.model.countDocuments({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] }),
     ]);
 
     return {
@@ -98,8 +99,13 @@ export class BaseRepository<T extends BaseDocument & Document> {
    * Find a single document by ID
    */
   async findById(id: string): Promise<T | null> {
+    let _id: any = id;
+    if (Types.ObjectId.isValid(id)) {
+      _id = new Types.ObjectId(id);
+    }
+
     return (this.model
-      .findOne({ _id: id, isDeleted: false })
+      .findOne({ _id, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] })
       .lean()
       .exec() as any) as T | null;
   }
@@ -109,7 +115,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
    */
   async findOne(filter: Filter<T>): Promise<T | null> {
     return (this.model
-      .findOne({ ...filter, isDeleted: false })
+      .findOne({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] })
       .lean()
       .exec() as any) as T | null;
   }
@@ -119,7 +125,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
    */
   async find(filter: Filter<T>): Promise<T[]> {
     return (this.model
-      .find({ ...filter, isDeleted: false })
+      .find({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] })
       .lean()
       .exec() as any) as T[];
   }
@@ -128,7 +134,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
    * Count documents
    */
   async count(filter: Filter<T> = {}): Promise<number> {
-    return this.model.countDocuments({ ...filter, isDeleted: false });
+    return this.model.countDocuments({ ...filter, $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] });
   }
 
   /**

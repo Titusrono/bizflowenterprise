@@ -13,30 +13,64 @@ export class InventoryRepository extends BaseRepository<InventoryDocument> {
 
   async findBySku(sku: string, organizationId: string): Promise<InventoryDocument | null> {
     return this.model
-      .findOne({ sku: sku.toUpperCase(), organizationId, isDeleted: false })
+      .findOne({
+        sku: sku.toUpperCase(),
+        organizationId: new Types.ObjectId(organizationId),
+        isDeleted: false,
+      })
       .lean()
       .exec();
   }
 
-  async findByOrganization(organizationId: string, page: number = 1, limit: number = 10) {
-    return this.findAllPaginated({ organizationId }, page, limit);
+  async findByOrganization(
+    organizationId: string,
+    branchId?: string | null,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const filter: any = { organizationId };
+    if (branchId) {
+      filter.branchId = branchId;
+    }
+
+    return this.findAllPaginated(
+      {
+        ...filter,
+        organizationId: new Types.ObjectId(organizationId),
+        ...(branchId ? { branchId: new Types.ObjectId(branchId) } : {}),
+      },
+      page,
+      limit,
+    );
   }
 
-  async findLowStock(organizationId: string) {
-    return this.find({
-      organizationId,
+  async findLowStock(organizationId: string, branchId?: string | null) {
+    const filter: any = {
+      organizationId: new Types.ObjectId(organizationId),
       isDeleted: false,
       $expr: { $lte: ['$quantity', '$reorderLevel'] },
-    } as any);
+    };
+
+    if (branchId) {
+      filter.branchId = new Types.ObjectId(branchId);
+    }
+
+    return this.find(filter as any);
   }
 
-  async getOrganizationStats(organizationId: string) {
+  async getOrganizationStats(organizationId: string, branchId?: string | null) {
+    const match: any = {
+      organizationId: new Types.ObjectId(organizationId),
+      isDeleted: false,
+    };
+
+    if (branchId) {
+      match.branchId = new Types.ObjectId(branchId);
+    }
+
     const [totals] = await this.aggregate([
       {
-        $match: {
-          organizationId: new Types.ObjectId(organizationId),
-          isDeleted: false,
-        },
+        $match: match,
       },
       {
         $group: {

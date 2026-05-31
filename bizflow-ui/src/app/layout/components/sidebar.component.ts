@@ -92,6 +92,20 @@ interface NavItem {
             <i class="bi bi-people-fill text-lg"></i>
             <span>Users</span>
           </button>
+          <button
+            (click)="navigateTo('/inventory')"
+            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-700 dark:text-[#cbd5e1] hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors"
+          >
+            <i class="bi bi-box-seam text-lg"></i>
+            <span>Inventory</span>
+          </button>
+          <button
+            (click)="navigateTo('/restocks')"
+            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-700 dark:text-[#cbd5e1] hover:bg-neutral-100 dark:hover:bg-[#1a2540] transition-colors"
+          >
+            <i class="bi bi-arrow-repeat text-lg"></i>
+            <span>Restocks</span>
+          </button>
         </div>
       </div>
 
@@ -152,6 +166,7 @@ export class SidebarComponent implements OnInit {
       { label: 'Analytics', icon: 'bi-graph-up-arrow', route: '/analytics' },
       { label: 'Reports', icon: 'bi-file-earmark-bar-graph-fill', route: '/reports' },
       { label: 'Settings', icon: 'bi-gear-fill', route: '/settings' },
+      { label: 'Restocks', icon: 'bi-arrow-repeat', route: '/restocks' },
     ];
     this.navigationItems.set(items);
   }

@@ -1,0 +1,72 @@
+<div class="card border border-neutral-200/70 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ mode === 'create' ? 'Create' : 'Edit' }} {{ title }}</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Inventory uses the active session's organization and branch automatically.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Name</span>
+      <input class="input-field" formControlName="name" placeholder="Item name" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">SKU</span>
+      <input class="input-field uppercase" formControlName="sku" placeholder="SKU-001" />
+    </label>
+
+    <label class="space-y-2 md:col-span-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Description</span>
+      <textarea class="input-field min-h-[6rem]" formControlName="description" placeholder="Optional description"></textarea>
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Category</span>
+      <input class="input-field" formControlName="category" placeholder="Category" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Location</span>
+      <input class="input-field" formControlName="location" placeholder="Warehouse A" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Quantity</span>
+      <input class="input-field" type="number" formControlName="quantity" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Unit price</span>
+      <input class="input-field" type="number" formControlName="unitPrice" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Cost price</span>
+      <input class="input-field" type="number" formControlName="costPrice" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Reorder level</span>
+      <input class="input-field" type="number" formControlName="reorderLevel" />
+    </label>
+
+    <div class="md:col-span-2 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700 p-4">
+      <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Organization and branch are assigned from the active session.</p>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">No manual selection is required when creating or editing inventory items.</p>
+    </div>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Status</span>
+      <select class="input-field" formControlName="status">
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="pending">Pending</option>
+        <option value="archived">Archived</option>
+      </select>
+    </label>
+
+    <div class="md:col-span-2 flex items-center justify-end gap-3 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </form>
+</div>
