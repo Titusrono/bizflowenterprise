@@ -11,7 +11,10 @@ import { PaymentMethod, SaleRecord } from '../../service/sales.service';
   styleUrls: ['./payment-modal.component.scss'],
 })
 export class PaymentModalComponent implements OnChanges {
-  @Input() sale: SaleRecord | null = null;
+  @Input() sale: any | null = null;
+  @Input() title = 'Record Payment';
+  @Input() description = '';
+  @Input() referenceLabel = 'Invoice';
   @Input() maxAmount = 0;
   @Input() saving = false;
 
@@ -46,6 +49,10 @@ export class PaymentModalComponent implements OnChanges {
         notes: '',
       });
     }
+  }
+
+  recordReference(): string {
+    return this.sale?.invoiceNumber || this.sale?.saleNumber || this.sale?.billNumber || this.sale?.expenseNumber || this.sale?.purchaseNumber || this.sale?._id || '';
   }
 
   save(): void {

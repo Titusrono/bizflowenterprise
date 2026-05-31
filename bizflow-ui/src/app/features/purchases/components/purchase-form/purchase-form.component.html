@@ -1,0 +1,42 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label class="block text-sm font-medium mb-1">Supplier</label>
+    <select formControlName="supplierId" class="input">
+      <option value="">Select supplier</option>
+      <option *ngFor="let s of suppliers" [value]="s._id">{{ s.name }}</option>
+    </select>
+  </div>
+
+  <div formArrayName="lineItems">
+    <div *ngFor="let ctl of lineItems.controls; let i = index" [formGroupName]="i" class="grid grid-cols-4 gap-2 items-end">
+      <div>
+        <label class="text-xs">Item</label>
+        <input formControlName="name" class="input" />
+      </div>
+      <div>
+        <label class="text-xs">Qty</label>
+        <input type="number" formControlName="quantity" (input)="recalcLine(i)" class="input" />
+      </div>
+      <div>
+        <label class="text-xs">Unit</label>
+        <input type="number" formControlName="unitPrice" (input)="recalcLine(i)" class="input" />
+      </div>
+      <div>
+        <label class="text-xs">Subtotal</label>
+        <input formControlName="subtotal" class="input" readonly />
+      </div>
+      <div class="col-span-4 text-right">
+        <button type="button" (click)="removeLine(i)" class="btn btn-sm">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button type="button" (click)="addLine()" class="btn">Add Line</button>
+    <div class="ml-auto font-semibold">Total: {{ total | number:'1.2-2' }}</div>
+  </div>
+
+  <div class="text-right">
+    <button type="submit" [disabled]="form.invalid" class="btn btn-primary">Save Purchase</button>
+  </div>
+</form>

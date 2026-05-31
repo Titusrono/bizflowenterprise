@@ -55,6 +55,36 @@ export const routes: Routes = [
         component: TaxListComponent,
       },
       {
+        path: 'purchases',
+        component: ModulePageComponent,
+        data: {
+          category: 'Purchases',
+          title: 'Purchases',
+          shortLabel: 'Purchase',
+          description: 'Create and manage purchase orders and supplier invoices.',
+        },
+      },
+      {
+        path: 'bills',
+        component: ModulePageComponent,
+        data: {
+          category: 'Purchases',
+          title: 'Bills',
+          shortLabel: 'Bill',
+          description: 'Manage supplier bills and outstanding payables.',
+        },
+      },
+      {
+        path: 'expenses',
+        component: ModulePageComponent,
+        data: {
+          category: 'Purchases',
+          title: 'Expenses',
+          shortLabel: 'Expense',
+          description: 'Record other business expenses.',
+        },
+      },
+      {
         path: 'payments',
         component: PaymentListComponent,
       },

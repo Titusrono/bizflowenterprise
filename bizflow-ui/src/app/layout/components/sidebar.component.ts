@@ -147,7 +147,7 @@ export class SidebarComponent implements OnInit {
   sidebarOpen = signal(false);
   navigationItems = signal<NavItem[]>([]);
   navigationGroups = signal<NavGroup[]>([]);
-  openGroups = signal<Record<string, boolean>>({ inventory: false, sales: false, reports: false, administration: false });
+  openGroups = signal<Record<string, boolean>>({ inventory: false, sales: false, reports: false, purchases: false, administration: false });
   currentUser = signal<User | null>(null);
   private activeRoute = signal<string>('');
 
@@ -187,6 +187,16 @@ export class SidebarComponent implements OnInit {
         items: [
           { label: 'Analytics', icon: 'bi-graph-up-arrow', route: '/analytics' },
           { label: 'Reports', icon: 'bi-file-earmark-bar-graph-fill', route: '/reports' },
+        ],
+      },
+      {
+        label: 'Purchases',
+        icon: 'bi-receipt',
+        key: 'purchases',
+        items: [
+          { label: 'Purchases', icon: 'bi-box', route: '/purchases' },
+          { label: 'Bills', icon: 'bi-file-text', route: '/bills' },
+          { label: 'Expenses', icon: 'bi-wallet', route: '/expenses' },
         ],
       },
       {

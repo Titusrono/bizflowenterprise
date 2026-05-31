@@ -145,6 +145,11 @@ export class BaseRepository<T extends BaseDocument & Document> {
     updateDto: UpdateQuery<T>,
     userId?: string,
   ): Promise<T | null> {
+    let _id: any = id;
+    if (Types.ObjectId.isValid(id)) {
+      _id = new Types.ObjectId(id);
+    }
+
     const update = {
       ...updateDto,
       updatedBy: userId,
@@ -152,7 +157,7 @@ export class BaseRepository<T extends BaseDocument & Document> {
     } as Record<string, any>;
 
     const updated = await this.model
-      .findByIdAndUpdate(id, { $set: update }, { new: true })
+      .findByIdAndUpdate(_id, { $set: update }, { new: true })
       .lean()
       .exec();
 
@@ -203,9 +208,14 @@ export class BaseRepository<T extends BaseDocument & Document> {
    * Soft delete - marks document as deleted
    */
   async softDelete(id: string, userId?: string): Promise<T | null> {
+    let _id: any = id;
+    if (Types.ObjectId.isValid(id)) {
+      _id = new Types.ObjectId(id);
+    }
+
     return (this.model
       .findByIdAndUpdate(
-        id,
+        _id,
         {
           isDeleted: true,
           deletedAt: new Date(),

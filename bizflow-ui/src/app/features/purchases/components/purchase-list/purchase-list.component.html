@@ -1,0 +1,13 @@
+<section class="space-y-4 p-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-semibold">Purchases</h2>
+    <button class="btn btn-primary" (click)="openCreate()">New Purchase</button>
+  </div>
+
+  <div *ngIf="loading">Loading...</div>
+  <ul *ngIf="!loading">
+    <li *ngFor="let p of records">{{ p.purchaseNumber || p._id }} — {{ p.total }}</li>
+  </ul>
+
+  <app-purchase-form *ngIf="modalOpen" (created)="onCreated()"></app-purchase-form>
+</section>

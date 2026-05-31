@@ -16,6 +16,9 @@ import { TaxesModule } from './taxes/taxes.module';
 import { PaymentsModule } from './payments/payments.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { CustomersModule } from './customers/customers.module';
+import { PurchasesModule } from './purchases/purchases.module';
+import { BillsModule } from './bills/bills.module';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
   imports: [
@@ -43,6 +46,9 @@ import { CustomersModule } from './customers/customers.module';
     CustomersModule,
     RestocksModule,
     TaxesModule,
+    PurchasesModule,
+    BillsModule,
+    ExpensesModule,
     SalesModule,
   ],
   controllers: [AppController],

@@ -1,0 +1,13 @@
+<section class="p-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-semibold">Bills</h2>
+    <button class="btn btn-primary" (click)="openCreate()">New Bill</button>
+  </div>
+
+  <div *ngIf="loading">Loading...</div>
+  <ul *ngIf="!loading">
+    <li *ngFor="let b of bills">{{ b._id }} — {{ b.total }}</li>
+  </ul>
+
+  <app-bill-form *ngIf="modalOpen" (created)="onCreated()"></app-bill-form>
+</section>

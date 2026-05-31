@@ -1,9 +1,9 @@
 <div class="card border border-neutral-200 dark:border-neutral-800">
   <div class="card-header">
-    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Record Payment</h2>
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ title }}</h2>
     <p class="text-sm text-neutral-600 dark:text-neutral-400">
-      {{ sale?.saleType === 'credit' ? 'Apply payment to invoice' : 'Track additional payment' }}
-      <span class="font-semibold text-neutral-900 dark:text-white">{{ sale?.invoiceNumber || sale?.saleNumber }}</span>
+      {{ description || (sale?.saleType === 'credit' ? 'Apply payment to invoice' : 'Track additional payment') }}
+      <span class="font-semibold text-neutral-900 dark:text-white">{{ recordReference() }}</span>
     </p>
   </div>
 

@@ -21,6 +21,14 @@ import {
   User,
   UserStats,
 } from '../../../core/services/users.service';
+import { PurchasesService } from '../../purchases/service/purchases.service';
+import { BillsService } from '../../bills/service/bills.service';
+import { ExpensesService } from '../../expenses/service/expenses.service';
+import { PaymentModalComponent } from '../../sales/components/payment-modal/payment-modal.component';
+
+import { PurchaseFormComponent } from '../../purchases/components/purchase-form/purchase-form.component';
+import { BillFormComponent } from '../../bills/components/bill-form/bill-form.component';
+import { ExpenseFormComponent } from '../../expenses/components/expense-form/expense-form.component';
 
 interface ModuleStat {
   label: string;
@@ -47,7 +55,7 @@ type ModalMode = 'create' | 'edit';
 @Component({
   selector: 'app-module-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PurchaseFormComponent, BillFormComponent, ExpenseFormComponent, PaymentModalComponent],
   template: `
     <section class="space-y-6">
       <div class="flex items-start justify-between gap-4 flex-wrap sticky top-4 z-40 bg-inherit py-3">
@@ -84,7 +92,7 @@ type ModalMode = 'create' | 'edit';
         </div>
       </div>
 
-      <div class="card border border-neutral-200/70 dark:border-neutral-800">
+      <div class="card border border-neutral-200/70 dark:border-neutral-800" *ngIf="!isPurchaseModule() && !isBillModule() && !isExpenseModule()">
         <div class="card-body grid gap-4 lg:grid-cols-3 p-4 md:p-5">
           <label class="block space-y-2 lg:col-span-2">
             <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Search</span>
@@ -213,7 +221,53 @@ type ModalMode = 'create' | 'edit';
                       </span>
                     </td>
                     <td>
-                      <div class="flex items-center justify-end gap-2">
+                      <div class="flex items-center justify-end gap-2 flex-wrap">
+                        <ng-container *ngIf="isPurchaseModule()">
+                          <button 
+                            *ngIf="showApproveAction(record.status)"
+                            class="btn btn-ghost btn-sm" 
+                            type="button" 
+                            (click)="approvePurchase(record.id)" 
+                            [disabled]="saving()">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Approve
+                          </button>
+                          <button 
+                            *ngIf="showReceiveAction(record.status)"
+                            class="btn btn-ghost btn-sm" 
+                            type="button" 
+                            (click)="receivePurchase(record.id)" 
+                            [disabled]="saving()">
+                            <i class="bi bi-box-seam me-1"></i>
+                            Receive
+                          </button>
+                          <button 
+                            *ngIf="showConvertToBillAction(record.status)"
+                            class="btn btn-primary btn-sm" 
+                            type="button" 
+                            (click)="convertPurchaseToBill(record.id)" 
+                            [disabled]="saving()">
+                            <i class="bi bi-arrow-right-circle me-1"></i>
+                            To Bill
+                          </button>
+                          <button 
+                            *ngIf="showPaidAction(record.status)"
+                            class="btn btn-success btn-sm" 
+                            type="button" 
+                            (click)="markPurchasePaid(record.id)" 
+                            [disabled]="saving()">
+                            <i class="bi bi-cash-coin me-1"></i>
+                            Paid
+                          </button>
+                        </ng-container>
+
+                        <ng-container *ngIf="isBillModule() || isExpenseModule()">
+                          <button class="btn btn-primary btn-sm" type="button" (click)="openPaymentModal(record.id)" [disabled]="saving() || selectedPaymentAmount(record.id) <= 0">
+                            <i class="bi bi-wallet2 me-1"></i>
+                            Pay
+                          </button>
+                        </ng-container>
+
                         <button class="btn btn-ghost btn-sm" type="button" (click)="openEditModal(record.id)">
                           <i class="bi bi-pencil-square me-1"></i>
                           Edit
@@ -257,67 +311,81 @@ type ModalMode = 'create' | 'edit';
             </button>
           </div>
 
-          <form [formGroup]="recordForm" (ngSubmit)="saveRecord()" class="card-body space-y-5 overflow-y-auto">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label *ngIf="showNameField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">{{ nameLabel() }}</span>
-                <input class="input-field" formControlName="name" [placeholder]="namePlaceholder()" />
-              </label>
+          <ng-container *ngIf="isPurchaseModule()">
+            <app-purchase-form (created)="onChildCreated()"></app-purchase-form>
+          </ng-container>
 
-              <label *ngIf="showCodeField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Code</span>
-                <input class="input-field uppercase" formControlName="code" placeholder="ORG-001" />
-              </label>
+          <ng-container *ngIf="isBillModule()">
+            <app-bill-form (created)="onChildCreated()"></app-bill-form>
+          </ng-container>
 
-              <label *ngIf="showEmailField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Email</span>
-                <input class="input-field" formControlName="email" type="email" placeholder="name@example.com" />
-              </label>
+          <ng-container *ngIf="isExpenseModule()">
+            <app-expense-form (created)="onChildCreated()"></app-expense-form>
+          </ng-container>
 
-              <label *ngIf="showPasswordField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Password</span>
-                <input class="input-field" formControlName="password" type="password" placeholder="••••••••" />
-              </label>
+          <ng-container *ngIf="!isPurchaseModule() && !isBillModule() && !isExpenseModule()">
+            <form [formGroup]="recordForm" (ngSubmit)="saveRecord()" class="card-body space-y-5 overflow-y-auto">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label *ngIf="showNameField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">{{ nameLabel() }}</span>
 
-              <label *ngIf="showFirstNameField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">First name</span>
-                <input class="input-field" formControlName="firstName" placeholder="First name" />
-              </label>
+                  <input class="input-field" formControlName="name" [placeholder]="namePlaceholder()" />
+                </label>
 
-              <label *ngIf="showLastNameField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Last name</span>
-                <input class="input-field" formControlName="lastName" placeholder="Last name" />
-              </label>
+                <label *ngIf="showCodeField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Code</span>
+                  <input class="input-field uppercase" formControlName="code" placeholder="ORG-001" />
+                </label>
 
-              <label *ngIf="showPhoneField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Phone</span>
-                <input class="input-field" formControlName="phone" placeholder="+1 555 000 0000" />
-              </label>
+                <label *ngIf="showEmailField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Email</span>
+                  <input class="input-field" formControlName="email" type="email" placeholder="name@example.com" />
+                </label>
 
-              <label *ngIf="showLocationField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Location</span>
-                <input class="input-field" formControlName="location" placeholder="Main office location" />
-              </label>
+                <label *ngIf="showPasswordField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Password</span>
+                  <input class="input-field" formControlName="password" type="password" placeholder="••••••••" />
+                </label>
 
-              <label *ngIf="showAddressField()" class="block space-y-2 md:col-span-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Address</span>
-                <input class="input-field" formControlName="address" placeholder="Street address" />
-              </label>
+                <label *ngIf="showFirstNameField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">First name</span>
+                  <input class="input-field" formControlName="firstName" placeholder="First name" />
+                </label>
 
-              <label *ngIf="showCityField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">City</span>
-                <input class="input-field" formControlName="city" placeholder="City" />
-              </label>
+                <label *ngIf="showLastNameField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Last name</span>
+                  <input class="input-field" formControlName="lastName" placeholder="Last name" />
+                </label>
 
-              <label *ngIf="showStateField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">State</span>
-                <input class="input-field" formControlName="state" placeholder="State" />
-              </label>
+                <label *ngIf="showPhoneField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Phone</span>
+                  <input class="input-field" formControlName="phone" placeholder="+1 555 000 0000" />
+                </label>
 
-              <label *ngIf="showCountryField()" class="block space-y-2">
-                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Country</span>
-                <input class="input-field" formControlName="country" placeholder="Country" />
-              </label>
+                <label *ngIf="showLocationField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Location</span>
+                  <input class="input-field" formControlName="location" placeholder="Main office location" />
+                </label>
+
+                <label *ngIf="showAddressField()" class="block space-y-2 md:col-span-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Address</span>
+                  <input class="input-field" formControlName="address" placeholder="Street address" />
+                </label>
+
+                <label *ngIf="showCityField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">City</span>
+                  <input class="input-field" formControlName="city" placeholder="City" />
+                </label>
+
+                <label *ngIf="showStateField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">State</span>
+                  <input class="input-field" formControlName="state" placeholder="State" />
+                </label>
+
+                <label *ngIf="showCountryField()" class="block space-y-2">
+                  <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Country</span>
+                  <input class="input-field" formControlName="country" placeholder="Country" />
+                </label>
 
               <label *ngIf="showZipField()" class="block space-y-2">
                 <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">ZIP code</span>
@@ -379,6 +447,22 @@ type ModalMode = 'create' | 'edit';
               </button>
             </div>
           </form>
+          </ng-container>
+        </div>
+      </div>
+
+      <div *ngIf="paymentModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+        <div class="w-full max-w-2xl">
+          <app-payment-modal
+            [sale]="selectedPaymentRecord()"
+            [title]="paymentTitle()"
+            [description]="paymentDescription()"
+            [referenceLabel]="paymentReferenceLabel()"
+            [maxAmount]="selectedPaymentAmount()"
+            [saving]="saving()"
+            (cancel)="closePaymentModal()"
+            (submitPayment)="submitPayment($event)"
+          ></app-payment-modal>
         </div>
       </div>
     </section>
@@ -402,6 +486,11 @@ export class ModulePageComponent implements OnInit {
   modalOpen = signal(false);
   modalMode = signal<ModalMode>('create');
   selectedRecordId = signal('');
+  paymentModalOpen = signal(false);
+  selectedPaymentRecord = signal<any>(null);
+  paymentTitle = signal('Record Payment');
+  paymentDescription = signal('Settle this transaction using the selected payment method.');
+  paymentReferenceLabel = signal('Reference');
   loading = signal(false);
   saving = signal(false);
   error = signal('');
@@ -441,6 +530,9 @@ export class ModulePageComponent implements OnInit {
     private organizationsService: OrganizationsService,
     private branchesService: BranchesService,
     private usersService: UsersService,
+    private purchasesService: PurchasesService,
+    private billsService: BillsService,
+    private expensesService: ExpensesService,
   ) {
     this.currentUser.set(this.authService.getCurrentUser());
     this.recordForm = this.fb.group({
@@ -463,6 +555,144 @@ export class ModulePageComponent implements OnInit {
       organizationId: [''],
       branchId: [''],
     });
+  }
+
+  isPurchaseModule(): boolean {
+    return this.title().toLowerCase().includes('purchase');
+  }
+
+  isBillModule(): boolean {
+    return this.title().toLowerCase().includes('bill');
+  }
+
+  isExpenseModule(): boolean {
+    return this.title().toLowerCase().includes('expense');
+  }
+
+  // Purchase action visibility helpers
+  showApproveAction(status: string): boolean {
+    return status === 'OPEN';
+  }
+
+  showReceiveAction(status: string): boolean {
+    return status === 'APPROVED';
+  }
+
+  showConvertToBillAction(status: string): boolean {
+    return status === 'RECEIVED' || status === 'PARTIALLY_RECEIVED';
+  }
+
+  showPaidAction(status: string): boolean {
+    return status === 'CONVERTED_TO_BILL';
+  }
+
+  onChildCreated(): void {
+    this.closeModal();
+    void this.loadModuleData();
+  }
+
+  openPaymentModal(recordId: string): void {
+    const selected = this.findTransactionRecord(recordId);
+    if (!selected) {
+      return;
+    }
+
+    this.selectedPaymentRecord.set(selected);
+    this.paymentModalOpen.set(true);
+    this.paymentTitle.set(this.isBillModule() ? 'Record Bill Payment' : 'Record Expense Payment');
+    this.paymentDescription.set(this.isBillModule() ? 'Clear the bill using cash, bank, or Mpesa.' : 'Settle the expense using cash, bank, or Mpesa.');
+    this.paymentReferenceLabel.set(this.isBillModule() ? 'Bill' : 'Expense');
+  }
+
+  closePaymentModal(): void {
+    this.paymentModalOpen.set(false);
+    this.selectedPaymentRecord.set(null);
+  }
+
+  selectedPaymentAmount(recordId?: string): number {
+    const selected = recordId ? this.findTransactionRecord(recordId) : this.selectedPaymentRecord();
+    return Number(selected?.balanceDue ?? selected?.amount ?? selected?.total ?? 0);
+  }
+
+  async submitPayment(payload: {
+    amount: number;
+    method: 'bank' | 'cash' | 'mpesa';
+    paidAt?: string;
+    reference?: string;
+    notes?: string;
+  }): Promise<void> {
+    const selected = this.selectedPaymentRecord();
+    if (!selected) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+
+    try {
+      if (this.isBillModule()) {
+        await firstValueFrom(this.billsService.recordPayment(selected._id, { payment: payload }));
+      } else if (this.isExpenseModule()) {
+        await firstValueFrom(this.expensesService.recordPayment(selected._id, { payment: payload }));
+      }
+
+      this.closePaymentModal();
+      await this.loadModuleData();
+    } catch (error: any) {
+      this.error.set(error?.error?.message || error?.message || 'Failed to record payment.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async approvePurchase(recordId: string): Promise<void> {
+    try {
+      await firstValueFrom(this.purchasesService.approvePurchase(recordId));
+      await this.loadModuleData();
+    } catch (error: any) {
+      this.error.set(error?.error?.message || error?.message || 'Failed to approve purchase.');
+    }
+  }
+
+  async receivePurchase(recordId: string): Promise<void> {
+    const purchase = this.findTransactionRecord(recordId);
+    if (!purchase) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(
+        this.purchasesService.receivePurchase(recordId, {
+          lineItems: purchase.lineItems || [],
+          receivedAt: new Date().toISOString(),
+          notes: 'Received via UI',
+        }),
+      );
+      await this.loadModuleData();
+    } catch (error: any) {
+      this.error.set(error?.error?.message || error?.message || 'Failed to receive purchase.');
+    }
+  }
+
+  async markPurchasePaid(recordId: string): Promise<void> {
+    try {
+      await firstValueFrom(this.purchasesService.markPaid(recordId));
+      await this.loadModuleData();
+    } catch (error: any) {
+      this.error.set(error?.error?.message || error?.message || 'Failed to mark purchase as paid.');
+    }
+  }
+
+  async convertPurchaseToBill(recordId: string): Promise<void> {
+    const purchase = this.findTransactionRecord(recordId);
+    const source = purchase?.receipts?.length ? 'received' : 'ordered';
+
+    try {
+      await firstValueFrom(this.purchasesService.convertToBill(recordId, source));
+      await this.loadModuleData();
+    } catch (error: any) {
+      this.error.set(error?.error?.message || error?.message || 'Failed to convert purchase to bill.');
+    }
   }
 
   ngOnInit(): void {
@@ -531,6 +761,7 @@ export class ModulePageComponent implements OnInit {
 
     try {
       await this.loadOrganizationOptions();
+      const organizationId = this.getScopedTransactionOrganizationId();
 
       switch (this.moduleKind()) {
         case 'organizations': {
@@ -598,6 +829,32 @@ export class ModulePageComponent implements OnInit {
           break;
         }
         default:
+          if (this.isPurchaseModule()) {
+            const response = await firstValueFrom(this.purchasesService.getByOrganization(organizationId, 1, this.pageSize));
+            // Filter out converted purchases (those with billId set) to keep them only in bills list
+            const activePurchases = response.data.filter(p => !p.billId && p.status !== 'CONVERTED_TO_BILL');
+            this.stats.set(this.buildTransactionStats('Purchase', response.total, activePurchases.length, 'bi-bag-check-fill'));
+            this.records.set(activePurchases.map((purchase) => this.mapPurchaseRecord(purchase)));
+            this.rawRecords.set(activePurchases);
+            break;
+          }
+
+          if (this.isBillModule()) {
+            const response = await firstValueFrom(this.billsService.getByOrganization(organizationId, 1, this.pageSize));
+            this.stats.set(this.buildTransactionStats('Bill', response.total, response.data.length, 'bi-receipt-cutoff'));
+            this.records.set(response.data.map((bill) => this.mapBillRecord(bill)));
+            this.rawRecords.set(response.data);
+            break;
+          }
+
+          if (this.isExpenseModule()) {
+            const response = await firstValueFrom(this.expensesService.getByOrganization(organizationId, 1, this.pageSize));
+            this.stats.set(this.buildTransactionStats('Expense', response.total, response.data.length, 'bi-wallet2'));
+            this.records.set(response.data.map((expense) => this.mapExpenseRecord(expense)));
+            this.rawRecords.set(response.data);
+            break;
+          }
+
           this.records.set([]);
           break;
       }
@@ -785,6 +1042,12 @@ export class ModulePageComponent implements OnInit {
         await firstValueFrom(this.branchesService.deleteBranch(recordId));
       } else if (this.moduleKind() === 'users') {
         await firstValueFrom(this.usersService.deleteUser(recordId));
+      } else if (this.isPurchaseModule()) {
+        await firstValueFrom((this.purchasesService as any).deletePurchase(recordId));
+      } else if (this.isBillModule()) {
+        await firstValueFrom((this.billsService as any).deleteBill(recordId));
+      } else if (this.isExpenseModule()) {
+        await firstValueFrom((this.expensesService as any).deleteExpense(recordId));
       }
 
       await this.loadModuleData();
@@ -875,6 +1138,57 @@ export class ModulePageComponent implements OnInit {
     };
   }
 
+  private mapPurchaseRecord(purchase: any): DisplayRecord {
+    return {
+      id: purchase._id,
+      title: purchase.purchaseNumber || purchase.referenceNumber || purchase._id,
+      subtitle: purchase.supplierId || 'Supplier not set',
+      status: purchase.status || 'OPEN',
+      updatedAt: this.formatDate(purchase.updatedAt || purchase.createdAt),
+      icon: 'bi-bag-check-fill',
+      metaPrimary: `Total: ${this.formatCurrency(purchase.total ?? purchase.subtotal ?? 0)}`,
+      metaSecondary: purchase.lineItems?.length ? `${purchase.lineItems.length} line item(s)` : 'No line items',
+      metaTertiary: purchase.organizationId || 'Organization not set',
+    };
+  }
+
+  private mapBillRecord(bill: any): DisplayRecord {
+    return {
+      id: bill._id,
+      title: bill.billNumber || bill.referenceNumber || bill._id,
+      subtitle: bill.supplierId || 'Supplier not set',
+      status: bill.status || 'OPEN',
+      updatedAt: this.formatDate(bill.updatedAt || bill.createdAt),
+      icon: 'bi-receipt-cutoff',
+      metaPrimary: `Total: ${this.formatCurrency(bill.total ?? bill.subtotal ?? 0)}`,
+      metaSecondary: bill.purchaseId ? `From purchase ${bill.purchaseId}` : 'Standalone bill',
+      metaTertiary: bill.organizationId || 'Organization not set',
+    };
+  }
+
+  private mapExpenseRecord(expense: any): DisplayRecord {
+    return {
+      id: expense._id,
+      title: expense.expenseNumber || expense.referenceNumber || expense._id,
+      subtitle: expense.description || expense.supplierId || 'Expense entry',
+      status: expense.status || 'OPEN',
+      updatedAt: this.formatDate(expense.updatedAt || expense.createdAt),
+      icon: 'bi-wallet2',
+      metaPrimary: `Amount: ${this.formatCurrency(expense.amount ?? 0)}`,
+      metaSecondary: expense.supplierId ? `Supplier: ${expense.supplierId}` : 'No supplier',
+      metaTertiary: expense.organizationId || 'Organization not set',
+    };
+  }
+
+  private buildTransactionStats(label: string, total: number, shown: number, icon: string): ModuleStat[] {
+    return [
+      { label: 'Total', value: String(total), change: 'Live', icon },
+      { label: 'Shown', value: String(shown), change: 'Live', icon },
+      { label: `${label}s`, value: String(total), change: 'Live', icon },
+      { label: 'Pending', value: '0', change: 'Live', icon },
+    ];
+  }
+
   private async loadOrganizationOptions(): Promise<void> {
     // Allow super-admin to load organizations even when module is not 'scoped' so dropdowns
     // (create/edit) show the full organization list. For non-super-admins we only load when module is scoped.
@@ -889,6 +1203,10 @@ export class ModulePageComponent implements OnInit {
     if (!this.isSuperAdmin() && !this.scopeOrganizationId() && response.data.length) {
       this.scopeOrganizationId.set(response.data[0]._id);
     }
+  }
+
+  private getScopedTransactionOrganizationId(): string {
+    return this.scopeOrganizationId() || this.scopeService.getSelectedOrganizationId() || this.currentUser()?.organizationId || '';
   }
 
   private async loadBranchOptions(organizationId: string): Promise<void> {
@@ -919,6 +1237,10 @@ export class ModulePageComponent implements OnInit {
     const fallback = this.currentUser()?.organizationId || this.organizationOptions()[0]?._id || '';
     this.scopeOrganizationId.set(fallback);
     return fallback;
+  }
+
+  private formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
   }
 
   onOrganizationFormChange(orgId: string): void {
@@ -1084,6 +1406,10 @@ export class ModulePageComponent implements OnInit {
     }
 
     return null;
+  }
+
+  private findTransactionRecord(recordId: string): any | null {
+    return this.rawRecords().find((record: any) => record._id === recordId) || this.records().find((record) => record.id === recordId) || null;
   }
 
   private filteredRawUsers(): User[] {
