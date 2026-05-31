@@ -209,6 +209,8 @@ export class SidebarComponent implements OnInit {
           { label: 'Users', icon: 'bi-people-fill', route: '/users' },
           { label: 'Taxes', icon: 'bi-receipt-cutoff', route: '/taxes' },
           { label: 'Payments', icon: 'bi-wallet2', route: '/payments' },
+          { label: 'Suppliers', icon: 'bi-truck', route: '/suppliers' },
+          { label: 'Customers', icon: 'bi-people', route: '/customers' },
           { label: 'Settings', icon: 'bi-gear-fill', route: '/settings' },
         ],
       },

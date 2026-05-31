@@ -11,6 +11,8 @@ import { RestockListComponent } from './features/restocks/components/restock-lis
 import { SalesListComponent } from './features/sales/components/sales-list/sales-list.component';
 import { TaxListComponent } from './features/taxes/components/tax-list/tax-list.component';
 import { PaymentListComponent } from './features/payments/components/payment-list/payment-list.component';
+import { SupplierListComponent } from './features/suppliers/components/supplier-list/supplier-list.component';
+import { CustomerListComponent } from './features/customers/components/customer-list/customer-list.component';
 
 export const routes: Routes = [
   {
@@ -55,6 +57,14 @@ export const routes: Routes = [
       {
         path: 'payments',
         component: PaymentListComponent,
+      },
+      {
+        path: 'suppliers',
+        component: SupplierListComponent,
+      },
+      {
+        path: 'customers',
+        component: CustomerListComponent,
       },
       {
         path: 'restocks',

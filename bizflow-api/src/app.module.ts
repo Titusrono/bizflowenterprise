@@ -14,6 +14,8 @@ import { CommonModule } from './common/common.module';
 import { SalesModule } from './sales/sales.module';
 import { TaxesModule } from './taxes/taxes.module';
 import { PaymentsModule } from './payments/payments.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { PaymentsModule } from './payments/payments.module';
     CategoriesModule,
     InventoryModule,
     PaymentsModule,
+    SuppliersModule,
+    CustomersModule,
     RestocksModule,
     TaxesModule,
     SalesModule,

@@ -1,0 +1,27 @@
+<div class="card border border-neutral-200/70 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ mode === 'create' ? 'Create' : 'Edit' }} {{ title }}</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Capture customer contacts for sales and follow-up communication.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body grid grid-cols-1 gap-4">
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Name</span>
+      <input class="input-field" formControlName="name" placeholder="Customer name" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Phone number</span>
+      <input class="input-field" formControlName="phoneNumber" placeholder="07XX XXX XXX" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Email</span>
+      <input class="input-field" formControlName="email" type="email" placeholder="customer@example.com" />
+    </label>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </form>
+</div>
