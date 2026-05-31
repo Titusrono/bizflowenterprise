@@ -50,6 +50,7 @@ export interface RestockRequestPayload {
   notes?: string;
   organizationId?: string;
   branchId?: string;
+  status?: RestockRequestStatus;
   lineItems: RestockLineItem[];
 }
 

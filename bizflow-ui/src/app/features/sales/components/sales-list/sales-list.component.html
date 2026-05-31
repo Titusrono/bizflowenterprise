@@ -1,0 +1,240 @@
+<section class="space-y-6">
+  <div class="flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400">Revenue</p>
+      <h1 class="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mt-2">{{ pageHeading() }}</h1>
+      <p class="text-neutral-600 dark:text-neutral-400 mt-2 max-w-3xl">{{ pageDescription() }}</p>
+    </div>
+
+    <div class="flex items-center gap-3 flex-wrap">
+      <button class="btn btn-ghost" type="button" (click)="loadData()">Refresh</button>
+      <button *ngIf="activeTab() === 'cash'" class="btn btn-primary" type="button" (click)="openCreateSale('cash')">+ New Cash Sale</button>
+      <button *ngIf="activeTab() === 'credit'" class="btn btn-secondary" type="button" (click)="openCreateSale('credit')">+ New Credit Invoice</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+    <div class="card" *ngFor="let stat of summaryCards()">
+      <div class="card-body p-5">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ stat.label }}</p>
+        <p class="text-2xl font-bold text-neutral-900 dark:text-white mt-2">{{ stat.value | number: '1.0-2' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+
+  <div class="card border border-neutral-200/70 dark:border-neutral-800">
+    <div class="card-header flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Sales Register</h2>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ registerDescription() }}</p>
+      </div>
+
+      <div *ngIf="!scopedType()" class="flex items-center gap-2 rounded-xl border border-neutral-200 dark:border-neutral-800 p-1">
+        <button
+          type="button"
+          class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          [ngClass]="activeTab() === 'cash' ? 'bg-primary-600 text-white' : 'text-neutral-600 dark:text-neutral-400'"
+          (click)="switchTab('cash')"
+        >
+          Cash Sales
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          [ngClass]="activeTab() === 'credit' ? 'bg-primary-600 text-white' : 'text-neutral-600 dark:text-neutral-400'"
+          (click)="switchTab('credit')"
+        >
+          Credit Sales
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div *ngIf="loading()" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">Loading sales...</div>
+
+      <div *ngIf="!loading() && !activeRecords().length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
+        No {{ activeTab() === 'cash' ? 'cash sales' : 'credit invoices' }} found.
+      </div>
+
+      <div *ngIf="!loading() && activeRecords().length" class="overflow-x-auto">
+        <table class="table min-w-full">
+          <thead>
+            <tr>
+              <th>{{ activeTab() === 'cash' ? 'Sale Number' : 'Invoice Number' }}</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Payment</th>
+              <th>Invoice</th>
+              <th>Created</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of activeRecords()">
+              <td>
+                <div class="font-semibold text-neutral-900 dark:text-white">{{ item.invoiceNumber || item.saleNumber }}</div>
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.lineItems.length }} item(s)</div>
+              </td>
+              <td>
+                <div class="font-medium text-neutral-900 dark:text-white">{{ item.customerName || 'Walk-in Customer' }}</div>
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.customerPhone || 'No phone' }}</div>
+              </td>
+              <td>
+                <div class="font-semibold text-neutral-900 dark:text-white">{{ item.subtotal | number: '1.2-2' }}</div>
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">Paid {{ item.totalPaid | number: '1.2-2' }} | Balance {{ item.balanceDue | number: '1.2-2' }}</div>
+              </td>
+              <td>
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-success-100 text-success-900 dark:bg-success-900/20 dark:text-success-100': item.paymentStatus === 'paid',
+                    'bg-warning-100 text-warning-900 dark:bg-warning-900/20 dark:text-warning-100': item.paymentStatus === 'partial',
+                    'bg-danger-100 text-danger-900 dark:bg-danger-900/20 dark:text-danger-100': item.paymentStatus === 'unpaid'
+                  }"
+                >
+                  {{ paymentStatusLabel(item.paymentStatus) }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-success-100 text-success-900 dark:bg-success-900/20 dark:text-success-100': item.invoiceStatus === 'cleared',
+                    'bg-warning-100 text-warning-900 dark:bg-warning-900/20 dark:text-warning-100': item.invoiceStatus === 'partial',
+                    'bg-danger-100 text-danger-900 dark:bg-danger-900/20 dark:text-danger-100': item.invoiceStatus === 'open'
+                  }"
+                >
+                  {{ invoiceStatusLabel(item.invoiceStatus) }}
+                </span>
+              </td>
+              <td>{{ item.createdAt | date: 'mediumDate' }}</td>
+              <td>
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    [ngClass]="trackBalance(item) > 0 ? 'btn-primary' : 'btn-ghost'"
+                    [disabled]="trackBalance(item) <= 0"
+                    (click)="openPaymentModal(item)"
+                  >
+                    {{ trackBalance(item) > 0 ? 'Add Payment' : 'Cleared' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="saleModalOpen()" class="fixed inset-0 z-50 bg-slate-950/60 p-4 flex items-center justify-center">
+    <div class="card w-full max-w-6xl max-h-[90vh] overflow-y-auto border border-neutral-200 dark:border-neutral-800">
+      <div class="card-header">
+        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">
+          {{ saleMode() === 'credit' ? 'Create Credit Invoice' : 'Create Cash Sale' }}
+        </h2>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">Stock is reduced after successful sale/invoice creation.</p>
+      </div>
+
+      <form [formGroup]="saleForm" class="card-body space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label class="label">Customer Name</label>
+            <input class="input-field" type="text" formControlName="customerName" placeholder="Optional" />
+          </div>
+          <div>
+            <label class="label">Phone</label>
+            <input class="input-field" type="text" formControlName="customerPhone" placeholder="Optional" />
+          </div>
+          <div *ngIf="saleMode() === 'credit'">
+            <label class="label">Invoice Due Date</label>
+            <input class="input-field" type="date" formControlName="invoiceDueDate" />
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Notes</label>
+          <textarea class="input-field min-h-[80px]" formControlName="notes" placeholder="Optional notes"></textarea>
+        </div>
+
+        <div class="space-y-4" formArrayName="lineItems">
+          <div *ngFor="let lineItem of lineItems.controls; let i = index" [formGroupName]="i" class="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-4">
+            <div class="flex items-center justify-between gap-4">
+              <h3 class="font-semibold text-neutral-900 dark:text-white">Line Item {{ i + 1 }}</h3>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeLineItem(i)">Remove</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div class="lg:col-span-2">
+                <label class="label">Inventory Item</label>
+                <select class="input-field" formControlName="inventoryId" (change)="onInventorySelect(i)">
+                  <option value="">Select inventory item</option>
+                  <option *ngFor="let inventoryItem of inventoryOptions()" [value]="inventoryItem._id">
+                    {{ inventoryLabel(inventoryItem) }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="label">Quantity</label>
+                <input class="input-field" type="number" min="1" formControlName="quantity" />
+              </div>
+              <div>
+                <label class="label">Unit Price</label>
+                <input class="input-field" type="number" min="0" step="0.01" formControlName="unitPrice" />
+              </div>
+              <div>
+                <label class="label">In Stock</label>
+                <input class="input-field" type="number" formControlName="availableQuantity" readonly />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="label">SKU</label>
+                <input class="input-field" type="text" formControlName="sku" readonly />
+              </div>
+              <div>
+                <label class="label">Name</label>
+                <input class="input-field" type="text" formControlName="name" readonly />
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-ghost" (click)="addLineItem()">+ Add Item</button>
+        </div>
+
+        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <h3 class="font-semibold text-neutral-900 dark:text-white">Sale Total</h3>
+            <div class="text-sm text-neutral-600 dark:text-neutral-400">Draft Total: {{ currentDraftTotal() | number: '1.2-2' }}</div>
+          </div>
+          <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Cash sales are marked paid automatically. Credit invoices can be settled later using the payment modal.
+          </p>
+        </div>
+      </form>
+
+      <div class="card-footer flex justify-end gap-3">
+        <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="closeCreateSale()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveSale()">
+          {{ saving() ? 'Saving...' : 'Create Sale' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="paymentModalOpen()" class="fixed inset-0 z-50 bg-slate-950/60 p-4 flex items-center justify-center">
+    <div class="w-full max-w-2xl">
+      <app-payment-modal
+        [sale]="selectedSaleForPayment()"
+        [maxAmount]="selectedSaleForPayment()?.balanceDue || 0"
+        [saving]="saving()"
+        (cancel)="closePaymentModal()"
+        (submitPayment)="submitPayment($event)"
+      ></app-payment-modal>
+    </div>
+  </div>
+</section>

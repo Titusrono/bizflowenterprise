@@ -1,0 +1,22 @@
+<div class="card border border-neutral-200/70 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ mode === 'create' ? 'Create' : 'Edit' }} {{ title }}</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Keep category names short and descriptive for reuse in inventory.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body grid grid-cols-1 gap-4">
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Name</span>
+      <input class="input-field" formControlName="name" placeholder="Hardware" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Description</span>
+      <textarea class="input-field min-h-[6rem]" formControlName="description" placeholder="Optional description"></textarea>
+    </label>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </form>
+</div>

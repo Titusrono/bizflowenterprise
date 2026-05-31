@@ -4,16 +4,20 @@
       <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Inventory Records</h2>
       <p class="text-sm text-neutral-600 dark:text-neutral-400">Review items, quantities, and stock levels.</p>
     </div>
+    <div class="flex items-center gap-3">
+      <button class="btn btn-ghost" type="button" (click)="loadData()">Refresh</button>
+      <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Item</button>
+    </div>
   </div>
 
   <div class="card-body p-0">
-    <div *ngIf="loading" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">Loading inventory...</div>
+    <div *ngIf="loading()" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">Loading inventory...</div>
 
-    <div *ngIf="!loading && !items.length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
+    <div *ngIf="!loading() && !records().length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
       No inventory items found.
     </div>
 
-    <div *ngIf="!loading && items.length" class="overflow-x-auto">
+    <div *ngIf="!loading() && records().length" class="overflow-x-auto">
       <table class="table min-w-full">
         <thead>
           <tr>
@@ -26,7 +30,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of items">
+          <tr *ngFor="let item of records()">
             <td>
               <div class="font-semibold text-neutral-900 dark:text-white">{{ item.name }}</div>
               <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.location || 'No location set' }}</div>
@@ -41,13 +45,29 @@
             </td>
             <td>
               <div class="flex justify-end gap-2">
-                <button type="button" class="btn btn-ghost btn-sm" (click)="edit.emit(item)">Edit</button>
-                <button type="button" class="btn btn-danger btn-sm" (click)="remove.emit(item._id)">Delete</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="openEdit(item)">Edit</button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="remove(item._id)">Delete</button>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div *ngIf="modalOpen()" class="fixed inset-0 z-50 bg-slate-950/60 p-4 flex items-center justify-center">
+    <div class="w-full max-w-4xl">
+      <app-inventory-form
+        [form]="form"
+        [categories]="categories()"
+        [mode]="modalMode()"
+        (cancel)="closeModal()"
+      ></app-inventory-form>
+
+      <div class="mt-4 flex justify-end gap-3">
+        <button class="btn btn-ghost" type="button" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" type="button" (click)="save()">{{ saving() ? 'Saving...' : (modalMode() === 'create' ? 'Create' : 'Update') }}</button>
+      </div>
     </div>
   </div>
 </div>

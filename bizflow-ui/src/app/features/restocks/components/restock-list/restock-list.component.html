@@ -1,0 +1,117 @@
+<section class="space-y-6">
+  <div class="flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400">Operations</p>
+      <h1 class="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mt-2">Restocks</h1>
+      <p class="text-neutral-600 dark:text-neutral-400 mt-2 max-w-3xl">Create inventory restock requests with line items and approve them to update stock quantities.</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button class="btn btn-ghost" type="button" (click)="loadData()">Refresh</button>
+      <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Restock</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+    <div class="card" *ngFor="let stat of [
+      { label: 'Total', value: stats().total },
+      { label: 'Pending', value: stats().pending },
+      { label: 'Approved', value: stats().approved },
+      { label: 'Line Items', value: stats().lineItems }
+    ]">
+      <div class="card-body p-5">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ stat.label }}</p>
+        <p class="text-2xl font-bold text-neutral-900 dark:text-white mt-2">{{ stat.value }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+
+  <div class="card border border-neutral-200/70 dark:border-neutral-800">
+    <div class="card-header flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Restock Requests</h2>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">Requests are scoped to the active organization and branch.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost" type="button" (click)="loadData()">Refresh</button>
+        <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Restock</button>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div *ngIf="loading()" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">Loading restocks...</div>
+
+      <div *ngIf="!loading() && !records().length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
+        No restock requests found.
+      </div>
+
+      <div *ngIf="!loading() && records().length" class="overflow-x-auto">
+        <table class="table min-w-full">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Line Items</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of records()">
+              <td>
+                <div class="font-semibold text-neutral-900 dark:text-white">{{ item.referenceNumber || item._id }}</div>
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.notes || 'No notes' }}</div>
+              </td>
+              <td>{{ item.lineItems.length || 0 }}</td>
+              <td>
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300': item.status === 'draft',
+                    'bg-warning-100 text-warning-900 dark:bg-warning-900/20 dark:text-warning-100': item.status === 'pending',
+                    'bg-success-100 text-success-900 dark:bg-success-900/20 dark:text-success-100': item.status === 'approved',
+                    'bg-danger-100 text-danger-900 dark:bg-danger-900/20 dark:text-danger-100': item.status === 'rejected'
+                  }"
+                >
+                  {{ statusLabel(item.status) }}
+                </span>
+              </td>
+              <td>{{ item.createdAt | date: 'mediumDate' }}</td>
+              <td>
+                <div class="flex flex-col items-end gap-2">
+                  <div class="flex justify-end gap-2 flex-wrap">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="openEdit(item)" [disabled]="item.status === 'approved' || item.status === 'rejected'">Edit</button>
+                    <ng-container *ngIf="item.status === 'pending'">
+                      <button type="button" class="btn btn-success btn-sm" (click)="approve(item)" [disabled]="approvingId() === item._id">Approve</button>
+                      <button type="button" class="btn btn-danger btn-sm" (click)="reject(item)" [disabled]="rejectingId() === item._id">Reject</button>
+                    </ng-container>
+                  </div>
+                  <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ actionHint(item.status) }}</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="modalOpen()" class="fixed inset-0 z-50 bg-slate-950/60 p-4 flex items-center justify-center">
+    <div class="w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+      <app-restock-form
+        [form]="form"
+        [inventoryOptions]="inventoryOptions()"
+        [mode]="modalMode()"
+        [saving]="saving()"
+        (cancel)="closeModal()"
+        (save)="save()"
+        (addLineItem)="addLineItem()"
+        (removeLineItem)="removeLineItem($event)"
+        (inventorySelected)="onInventorySelect($event)"
+      ></app-restock-form>
+    </div>
+  </div>
+
+</section>

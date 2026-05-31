@@ -5,8 +5,10 @@ import { RegisterComponent } from './features/auth/register/component/register.c
 import { DashboardComponent } from './features/dashboard/pages/dashboard.component';
 import { AuthenticatedShellComponent } from './layout/components/authenticated-shell.component';
 import { ModulePageComponent } from './features/shared/pages/module-page.component';
-import { InventoryComponent } from './features/inventory/pages/inventory.component';
-import { RestocksComponent } from './features/restocks/pages/restocks.component';
+import { CategoryListComponent } from './features/categories/components/category-list/category-list.component';
+import { InventoryListComponent } from './features/inventory/components/inventory-list/inventory-list.component';
+import { RestockListComponent } from './features/restocks/components/restock-list/restock-list.component';
+import { SalesListComponent } from './features/sales/components/sales-list/sales-list.component';
 
 export const routes: Routes = [
   {
@@ -38,11 +40,19 @@ export const routes: Routes = [
       },
       {
         path: 'inventory',
-        component: InventoryComponent,
+        component: InventoryListComponent,
+      },
+      {
+        path: 'categories',
+        component: CategoryListComponent,
       },
       {
         path: 'restocks',
-        component: RestocksComponent,
+        component: RestockListComponent,
+      },
+      {
+        path: 'sales',
+        component: SalesListComponent,
       },
       {
         path: 'users',

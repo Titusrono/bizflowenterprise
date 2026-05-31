@@ -1,0 +1,61 @@
+<div class="card border border-neutral-200 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Record Payment</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">
+      {{ sale?.saleType === 'credit' ? 'Apply payment to invoice' : 'Track additional payment' }}
+      <span class="font-semibold text-neutral-900 dark:text-white">{{ sale?.invoiceNumber || sale?.saleNumber }}</span>
+    </p>
+  </div>
+
+  <form [formGroup]="form" class="card-body space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="label">Amount</label>
+        <input class="input-field" type="number" min="0.01" step="0.01" formControlName="amount" />
+        <p *ngIf="form.get('amount')?.hasError('exceedsBalance')" class="text-xs text-danger-600 mt-1">
+          Amount cannot exceed outstanding balance.
+        </p>
+      </div>
+
+      <div>
+        <label class="label">Payment Method</label>
+        <select class="input-field" formControlName="method">
+          <option value="cash">Cash</option>
+          <option value="bank">Bank</option>
+          <option value="mpesa">Mpesa</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="label">Payment Date</label>
+        <input class="input-field" type="datetime-local" formControlName="paidAt" />
+      </div>
+
+      <div>
+        <label class="label">Reference</label>
+        <input class="input-field" type="text" formControlName="reference" placeholder="Bank/Mpesa reference" />
+      </div>
+    </div>
+
+    <div>
+      <label class="label">Notes</label>
+      <textarea class="input-field min-h-[90px]" formControlName="notes" placeholder="Optional payment notes"></textarea>
+    </div>
+
+    <div class="rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-3 text-sm">
+      <div class="flex items-center justify-between text-neutral-600 dark:text-neutral-400">
+        <span>Outstanding balance</span>
+        <span class="font-semibold text-neutral-900 dark:text-white">{{ maxAmount | number: '1.2-2' }}</span>
+      </div>
+    </div>
+  </form>
+
+  <div class="card-footer flex items-center justify-end gap-3">
+    <button type="button" class="btn btn-ghost" [disabled]="saving" (click)="cancel.emit()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="saving" (click)="save()">
+      {{ saving ? 'Saving...' : 'Record Payment' }}
+    </button>
+  </div>
+</div>

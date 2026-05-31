@@ -149,12 +149,14 @@ export class BaseRepository<T extends BaseDocument & Document> {
       ...updateDto,
       updatedBy: userId,
       updatedAt: new Date(),
-    };
+    } as Record<string, any>;
 
-    return (this.model
-      .findByIdAndUpdate(id, update, { new: true })
+    const updated = await this.model
+      .findByIdAndUpdate(id, { $set: update }, { new: true })
       .lean()
-      .exec() as any) as T | null;
+      .exec();
+
+    return updated as any as T | null;
   }
 
   /**

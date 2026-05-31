@@ -22,7 +22,25 @@
 
     <label class="space-y-2">
       <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Category</span>
-      <input class="input-field" formControlName="category" placeholder="Category" />
+      <ng-select
+        class="bizflow-ng-select"
+        formControlName="category"
+        [items]="categories"
+        bindLabel="name"
+        bindValue="name"
+        [searchable]="true"
+        [clearable]="true"
+        placeholder="Select a category"
+      >
+        <ng-template ng-option-tmp let-item="item">
+          <div class="flex flex-col">
+            <span class="font-medium text-neutral-900 dark:text-white">{{ item.name }}</span>
+            <span *ngIf="item.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+              {{ item.description }}
+            </span>
+          </div>
+        </ng-template>
+      </ng-select>
     </label>
 
     <label class="space-y-2">

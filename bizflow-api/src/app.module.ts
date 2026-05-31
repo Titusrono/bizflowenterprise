@@ -8,8 +8,10 @@ import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { BranchesModule } from './branches/branches.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { CategoriesModule } from './categories/categories.module';
 import { RestocksModule } from './restocks/restocks.module';
 import { CommonModule } from './common/common.module';
+import { SalesModule } from './sales/sales.module';
 
 @Module({
   imports: [
@@ -30,8 +32,10 @@ import { CommonModule } from './common/common.module';
     UsersModule,
     OrganizationsModule,
     BranchesModule,
+    CategoriesModule,
     InventoryModule,
     RestocksModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,19 +2,20 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom, Subscription } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
-import { ScopeService } from '../../../core/services/scope.service';
-import { Inventory, InventoryService } from '../../inventory/service/inventory.service';
-import { RestockLineItem, RestockRequest, RestockRequestStatus, RestockService, RestockStats } from '../service/restock.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ScopeService } from '../../../../core/services/scope.service';
+import { Inventory, InventoryService } from '../../../inventory/service/inventory.service';
+import { RestockFormComponent } from '../restock-form/restock-form.component';
+import { RestockLineItem, RestockRequest, RestockRequestStatus, RestockService, RestockStats } from '../../service/restock.service';
 
 @Component({
-  selector: 'app-restocks-page',
+  selector: 'app-restock-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './restocks.component.html',
-  styleUrls: ['./restocks.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, RestockFormComponent],
+  templateUrl: './restock-list.component.html',
+  styleUrls: ['./restock-list.component.scss'],
 })
-export class RestocksComponent implements OnInit, OnDestroy {
+export class RestockListComponent implements OnInit, OnDestroy {
   records = signal<RestockRequest[]>([]);
   stats = signal<RestockStats>({ total: 0, draft: 0, pending: 0, approved: 0, lineItems: 0 });
   inventoryOptions = signal<Inventory[]>([]);
@@ -23,13 +24,11 @@ export class RestocksComponent implements OnInit, OnDestroy {
   saving = signal(false);
   error = signal('');
   modalOpen = signal(false);
-  draftConfirmationOpen = signal(false);
   modalMode = signal<'create' | 'edit'>('create');
   selectedId = signal('');
   approvingId = signal('');
   rejectingId = signal('');
   selectedBranchId = signal('');
-  // status options removed from form — status is set by actions (create/save)
   private subscriptions = new Subscription();
   readonly form;
 
@@ -82,8 +81,16 @@ export class RestocksComponent implements OnInit, OnDestroy {
           : firstValueFrom(this.inventoryService.getAllInventory(1, 100)),
       ]);
 
-      this.stats.set(stats);
-      this.records.set(restocks.data);
+      const visibleRecords = restocks.data.filter((record) => record.status !== RestockRequestStatus.DRAFT);
+
+      this.stats.set({
+        total: visibleRecords.length,
+        draft: 0,
+        pending: visibleRecords.filter((record) => record.status === RestockRequestStatus.PENDING).length,
+        approved: visibleRecords.filter((record) => record.status === RestockRequestStatus.APPROVED).length,
+        lineItems: visibleRecords.reduce((count, record) => count + (record.lineItems?.length || 0), 0),
+      });
+      this.records.set(visibleRecords);
       this.inventoryOptions.set(inventoryResponse.data);
     } catch (error: any) {
       this.error.set(error?.error?.message || error?.message || 'Failed to load restocks.');
@@ -124,39 +131,11 @@ export class RestocksComponent implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
-    if (this.form.dirty && this.lineItems.length > 0 && this.lineItems.at(0).get('inventoryId')?.value) {
-      this.draftConfirmationOpen.set(true);
-      return;
-    }
-    this.closeDraftConfirmation();
-  }
-
-  closeDraftConfirmation(): void {
-    this.draftConfirmationOpen.set(false);
     this.modalOpen.set(false);
     this.form.reset();
     this.lineItems.clear();
     this.addLineItem();
     this.form.markAsPristine();
-  }
-
-  async saveDraft(): Promise<void> {
-    this.saving.set(true);
-    try {
-      const payload: any = this.buildPayload();
-      payload.status = RestockRequestStatus.DRAFT;
-      if (this.modalMode() === 'create') {
-        await firstValueFrom(this.restockService.createRestock(payload));
-      } else {
-        await firstValueFrom(this.restockService.updateRestock(this.selectedId(), payload));
-      }
-      this.closeDraftConfirmation();
-      await this.loadData();
-    } catch (error: any) {
-      this.error.set(error?.error?.message || error?.message || 'Failed to save draft restock request.');
-    } finally {
-      this.saving.set(false);
-    }
   }
 
   addLineItem(item?: Partial<RestockLineItem>): void {
@@ -200,42 +179,17 @@ export class RestocksComponent implements OnInit, OnDestroy {
       const payload: any = this.buildPayload();
 
       if (this.modalMode() === 'create') {
-        // create then submit to mark as pending
-        const created = await firstValueFrom(this.restockService.createRestock(payload));
-        console.log('SAVE_RESPONSE_CREATED', created);
-        if (created && created._id) {
-          const submitRes = await firstValueFrom(this.restockService.submitRestock(created._id));
-          console.log('SUBMIT_RESPONSE_CREATED', submitRes);
-        }
+        payload.status = RestockRequestStatus.PENDING;
+        await firstValueFrom(this.restockService.createRestock(payload));
       } else {
-        const current = this.records().find((r) => r._id === this.selectedId());
-        const updated = await firstValueFrom(this.restockService.updateRestock(this.selectedId(), payload));
-        console.log('SAVE_RESPONSE_UPDATED', updated);
-        // if editing a draft, explicitly submit to move to pending
-        if (current && current.status === RestockRequestStatus.DRAFT) {
-          const submitRes = await firstValueFrom(this.restockService.submitRestock(this.selectedId()));
-          console.log('SUBMIT_RESPONSE_UPDATED', submitRes);
-        }
+        await firstValueFrom(this.restockService.updateRestock(this.selectedId(), payload));
       }
 
-      // close without showing draft confirmation
       this.form.markAsPristine();
-      this.closeDraftConfirmation();
+      this.closeModal();
       await this.loadData();
     } catch (error: any) {
       this.error.set(error?.error?.message || error?.message || 'Failed to save restock request.');
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-  async submit(id: string): Promise<void> {
-    this.saving.set(true);
-    try {
-      await firstValueFrom(this.restockService.submitRestock(id));
-      await this.loadData();
-    } catch (error: any) {
-      this.error.set(error?.error?.message || error?.message || 'Failed to submit restock request.');
     } finally {
       this.saving.set(false);
     }
@@ -272,13 +226,15 @@ export class RestocksComponent implements OnInit, OnDestroy {
   }
 
   statusLabel(status: string): string {
+    if (status === RestockRequestStatus.DRAFT) {
+      return 'PENDING';
+    }
+
     return status ? status.toUpperCase() : 'UNKNOWN';
   }
 
   actionHint(status: string): string {
     switch (status) {
-      case RestockRequestStatus.DRAFT:
-        return 'Draft requests can be edited and submitted to pending.';
       case RestockRequestStatus.PENDING:
         return 'Pending requests can be approved or rejected.';
       case RestockRequestStatus.APPROVED:
@@ -323,16 +279,18 @@ export class RestocksComponent implements OnInit, OnDestroy {
     }
 
     return {
-      referenceNumber: raw.referenceNumber?.trim() || undefined,
-      notes: raw.notes?.trim() || undefined,
+      referenceNumber: raw.referenceNumber || undefined,
+      notes: raw.notes || undefined,
       organizationId,
       branchId,
       lineItems: raw.lineItems.map((lineItem: any) => ({
         inventoryId: lineItem.inventoryId,
+        sku: lineItem.sku,
+        name: lineItem.name,
         requestedQuantity: Number(lineItem.requestedQuantity),
-        approvedQuantity: Number(lineItem.approvedQuantity),
-        unitCost: Number(lineItem.unitCost),
-        notes: lineItem.notes?.trim() || undefined,
+        approvedQuantity: Number(lineItem.approvedQuantity ?? lineItem.requestedQuantity ?? 1),
+        unitCost: Number(lineItem.unitCost ?? 0),
+        notes: lineItem.notes || undefined,
       })),
     };
   }

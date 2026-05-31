@@ -84,14 +84,68 @@ export class InventoryService extends BaseService<InventoryDocument> {
       throw new BadRequestException('Inventory quantity cannot become negative');
     }
 
-    return this.repository.updateById(
-      inventoryId,
+    const inventoryObjectId = new Types.ObjectId(inventoryId);
+    const updateResult = await this.inventoryRepository.getModel().updateOne(
+      { _id: inventoryObjectId },
       {
-        quantity: nextQuantity,
-        lastStockedAt: new Date(),
-      } as any,
-      currentUserId,
+        $set: {
+          quantity: nextQuantity,
+          lastStockedAt: new Date(),
+          updatedBy: currentUserId ? new Types.ObjectId(currentUserId) : undefined,
+          updatedAt: new Date(),
+        },
+      },
     );
+
+    if (!updateResult.matchedCount) {
+      throw new BadRequestException('Inventory item not found');
+    }
+
+    const updatedInventory = await this.repository.findById(inventoryId);
+    if (!updatedInventory) {
+      throw new BadRequestException('Inventory item not found');
+    }
+
+    return updatedInventory;
+  }
+
+  async decreaseQuantity(inventoryId: string, amount: number, currentUserId?: string) {
+    if (Number(amount || 0) <= 0) {
+      throw new BadRequestException('Decrease amount must be greater than zero');
+    }
+
+    const current = await this.repository.findById(inventoryId);
+    if (!current) {
+      throw new BadRequestException('Inventory item not found');
+    }
+
+    const nextQuantity = Number(current.quantity || 0) - Number(amount || 0);
+    if (nextQuantity < 0) {
+      throw new BadRequestException('Insufficient inventory quantity for this sale');
+    }
+
+    const inventoryObjectId = new Types.ObjectId(inventoryId);
+    const updateResult = await this.inventoryRepository.getModel().updateOne(
+      { _id: inventoryObjectId },
+      {
+        $set: {
+          quantity: nextQuantity,
+          updatedBy: currentUserId ? new Types.ObjectId(currentUserId) : undefined,
+          updatedAt: new Date(),
+        },
+      },
+    );
+
+    if (!updateResult.matchedCount) {
+      throw new BadRequestException('Inventory item not found');
+    }
+
+    const updatedInventory = await this.repository.findById(inventoryId);
+    if (!updatedInventory) {
+      throw new BadRequestException('Inventory item not found');
+    }
+
+    return updatedInventory;
   }
 
   async softDelete(inventoryId: string, currentUserId?: string) {

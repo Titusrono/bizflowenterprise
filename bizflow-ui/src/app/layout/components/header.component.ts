@@ -13,7 +13,7 @@ import { User, UserRole } from '../../core/models';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <header class="sticky top-0 z-30 w-full bg-white dark:bg-[#0f1829] border-b border-neutral-200 dark:border-[#1e293b] transition-colors duration-300">
+    <header class="fixed top-0 left-0 right-0 md:left-64 z-40 w-auto bg-white dark:bg-[#0f1829] border-b border-neutral-200 dark:border-[#1e293b] transition-colors duration-300">
       <div class="grid w-full grid-cols-[1fr_auto_1fr] items-center h-16 md:h-20 px-4 sm:px-6 lg:px-8 gap-4">
         <div class="justify-self-start">
           <h2 class="text-lg md:text-2xl font-bold text-neutral-900 dark:text-white truncate">
@@ -201,6 +201,7 @@ export class HeaderComponent implements OnInit {
       organizations: 'Organizations',
       branches: 'Branches',
       inventory: 'Inventory',
+      categories: 'Categories',
       restocks: 'Restocks',
       analytics: 'Analytics',
       reports: 'Reports',

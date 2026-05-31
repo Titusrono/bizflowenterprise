@@ -1,0 +1,77 @@
+<div class="card">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">
+      {{ mode === 'create' ? 'Create Restock Request' : 'Edit Restock Request' }}
+    </h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Add inventory line items and approve them to restock stock on the selected branch.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="label">Reference Number</label>
+        <input class="input-field" type="text" formControlName="referenceNumber" placeholder="RST-0001" />
+      </div>
+      <div>
+        <label class="label">Notes</label>
+        <input class="input-field" type="text" formControlName="notes" placeholder="Reason for restock" />
+      </div>
+    </div>
+
+    <div class="space-y-4" [formGroup]="form">
+      <div formArrayName="lineItems" class="space-y-4">
+        <div *ngFor="let lineItem of lineItems.controls; let i = index" [formGroupName]="i" class="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="font-semibold text-neutral-900 dark:text-white">Line Item {{ i + 1 }}</h3>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeLineItem.emit(i)">Remove</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div>
+              <label class="label">Inventory</label>
+              <select class="input-field" formControlName="inventoryId" (change)="inventorySelected.emit(i)">
+                <option value="">Select inventory item</option>
+                <option *ngFor="let item of inventoryOptions" [value]="item._id">{{ inventoryLabel(item) }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Requested Quantity</label>
+              <input class="input-field" type="number" formControlName="requestedQuantity" min="1" />
+            </div>
+            <div>
+              <label class="label">Approved Quantity</label>
+              <input class="input-field" type="number" formControlName="approvedQuantity" min="0" />
+            </div>
+            <div>
+              <label class="label">Unit Cost</label>
+              <input class="input-field" type="number" formControlName="unitCost" min="0" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">SKU</label>
+              <input class="input-field" type="text" formControlName="sku" readonly />
+            </div>
+            <div>
+              <label class="label">Item Name</label>
+              <input class="input-field" type="text" formControlName="name" readonly />
+            </div>
+          </div>
+
+          <div>
+            <label class="label">Line Notes</label>
+            <input class="input-field" type="text" formControlName="notes" placeholder="Optional notes" />
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-ghost" (click)="addLineItem.emit()">+ Add Line Item</button>
+    </div>
+  </form>
+
+  <div class="card-footer flex justify-end gap-3">
+    <button type="button" class="btn btn-ghost" (click)="cancel.emit()" [disabled]="saving">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="save.emit()" [disabled]="saving">{{ saving ? 'Saving...' : (mode === 'create' ? 'Create Request' : 'Update Request') }}</button>
+  </div>
+</div>
