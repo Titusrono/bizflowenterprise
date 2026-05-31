@@ -9,6 +9,8 @@ import { CategoryListComponent } from './features/categories/components/category
 import { InventoryListComponent } from './features/inventory/components/inventory-list/inventory-list.component';
 import { RestockListComponent } from './features/restocks/components/restock-list/restock-list.component';
 import { SalesListComponent } from './features/sales/components/sales-list/sales-list.component';
+import { TaxListComponent } from './features/taxes/components/tax-list/tax-list.component';
+import { PaymentListComponent } from './features/payments/components/payment-list/payment-list.component';
 
 export const routes: Routes = [
   {
@@ -47,11 +49,23 @@ export const routes: Routes = [
         component: CategoryListComponent,
       },
       {
+        path: 'taxes',
+        component: TaxListComponent,
+      },
+      {
+        path: 'payments',
+        component: PaymentListComponent,
+      },
+      {
         path: 'restocks',
         component: RestockListComponent,
       },
       {
         path: 'sales',
+        component: SalesListComponent,
+      },
+      {
+        path: 'sales/stats',
         component: SalesListComponent,
       },
       {

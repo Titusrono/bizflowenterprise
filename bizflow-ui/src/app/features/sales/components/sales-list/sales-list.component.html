@@ -7,6 +7,11 @@
     </div>
 
     <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <input class="input-field" type="date" [value]="startDate() || ''" (change)="startDate.set($any($event.target).value || null)" />
+        <input class="input-field" type="date" [value]="endDate() || ''" (change)="endDate.set($any($event.target).value || null)" />
+        <button class="btn btn-ghost" type="button" (click)="startDate.set(null); endDate.set(null)">Clear</button>
+      </div>
       <button class="btn btn-ghost" type="button" (click)="loadData()">Refresh</button>
       <button *ngIf="activeTab() === 'cash'" class="btn btn-primary" type="button" (click)="openCreateSale('cash')">+ New Cash Sale</button>
       <button *ngIf="activeTab() === 'credit'" class="btn btn-secondary" type="button" (click)="openCreateSale('credit')">+ New Credit Invoice</button>
@@ -18,6 +23,67 @@
       <div class="card-body p-5">
         <p class="text-sm text-neutral-600 dark:text-neutral-400">{{ stat.label }}</p>
         <p class="text-2xl font-bold text-neutral-900 dark:text-white mt-2">{{ stat.value | number: '1.0-2' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card lg:col-span-2">
+      <div class="card-body p-5">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">Revenue Breakdown</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <div class="rounded p-4 bg-neutral-50 dark:bg-neutral-900">
+            <p class="text-xs text-neutral-500">Total Cash (cash sales + paid invoices)</p>
+            <p class="text-xl font-bold mt-2">{{ computedStats().totalCash | number:'1.2-2' }}</p>
+            <p class="text-xs text-neutral-500 mt-1">{{ computedStats().cashSales }} cash sales + {{ computedStats().paidSales }} paid invoices</p>
+          </div>
+          <div class="rounded p-4 bg-neutral-50 dark:bg-neutral-900">
+            <p class="text-xs text-neutral-500">Cash Sales Revenue</p>
+            <p class="text-xl font-bold mt-2">{{ computedStats().revenueCashSales | number:'1.2-2' }}</p>
+            <p class="text-xs text-neutral-500 mt-1">{{ computedStats().cashSales }} cash sale(s)</p>
+          </div>
+          <div class="rounded p-4 bg-neutral-50 dark:bg-neutral-900">
+            <p class="text-xs text-neutral-500">Paid Invoices Revenue</p>
+            <p class="text-xl font-bold mt-2">{{ computedStats().revenuePaidInvoices | number:'1.2-2' }}</p>
+            <p class="text-xs text-neutral-500 mt-1">{{ computedStats().paidSales }} paid invoice(s)</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <p class="text-sm text-neutral-600 dark:text-neutral-400">
+            Credit Invoices Total:
+            <span class="font-semibold">{{ computedStats().revenueCredits | number:'1.2-2' }}</span>
+            <span class="text-neutral-500">({{ computedStats().creditSales }} invoice(s))</span>
+          </p>
+          <p class="text-sm text-neutral-500 mt-1">
+            Pending Invoices:
+            <span class="font-semibold">{{ computedStats().openInvoices }}</span>
+            <span class="text-neutral-500"> / {{ computedStats().totalOutstanding | number:'1.2-2' }}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-5">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">Payments by Method</p>
+        <div class="mt-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm">Cash</span>
+            <span class="font-semibold">{{ computedStats().paymentMethodBreakdown?.cash | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm">Mpesa</span>
+            <span class="font-semibold">{{ computedStats().paymentMethodBreakdown?.mpesa | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm">Bank</span>
+            <span class="font-semibold">{{ computedStats().paymentMethodBreakdown?.bank | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm">Other</span>
+            <span class="font-semibold">{{ computedStats().paymentMethodBreakdown?.other | number:'1.2-2' }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -54,15 +120,15 @@
     <div class="card-body p-0">
       <div *ngIf="loading()" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">Loading sales...</div>
 
-      <div *ngIf="!loading() && !activeRecords().length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
-        No {{ activeTab() === 'cash' ? 'cash sales' : 'credit invoices' }} found.
+      <div *ngIf="!loading() && !visibleRecords().length" class="p-6 text-sm text-neutral-500 dark:text-neutral-400">
+        No records found.
       </div>
 
-      <div *ngIf="!loading() && activeRecords().length" class="overflow-x-auto">
+      <div *ngIf="!loading() && visibleRecords().length" class="overflow-x-auto">
         <table class="table min-w-full">
           <thead>
             <tr>
-              <th>{{ activeTab() === 'cash' ? 'Sale Number' : 'Invoice Number' }}</th>
+              <th>{{ showCombined() ? 'Number' : (activeTab() === 'cash' ? 'Sale Number' : 'Invoice Number') }}</th>
               <th>Customer</th>
               <th>Amount</th>
               <th>Payment</th>
@@ -72,7 +138,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of activeRecords()">
+            <tr *ngFor="let item of visibleRecords()">
               <td>
                 <div class="font-semibold text-neutral-900 dark:text-white">{{ item.invoiceNumber || item.saleNumber }}</div>
                 <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.lineItems.length }} item(s)</div>

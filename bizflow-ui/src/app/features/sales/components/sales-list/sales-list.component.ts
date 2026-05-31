@@ -56,22 +56,160 @@ export class SalesListComponent implements OnInit, OnDestroy {
   readonly saleForm;
 
   readonly activeRecords = computed(() => this.records().filter((record) => record.saleType === this.activeTab()));
+  readonly filteredActiveRecords = computed(() => {
+    const start = this.startDate() ? new Date(this.startDate() as string) : null;
+    const end = this.endDate() ? new Date(this.endDate() as string) : null;
+    return this.records()
+      .filter((r) => r.saleType === this.activeTab())
+      .filter((r) => {
+        if (!start && !end) return true;
+        const created = new Date(r.createdAt);
+        if (start && created < start) return false;
+        if (end) {
+          const endOfDay = new Date(end);
+          endOfDay.setHours(23, 59, 59, 999);
+          if (created > endOfDay) return false;
+        }
+        return true;
+      });
+  });
+
+  readonly filteredAllRecords = computed(() => {
+    const start = this.startDate() ? new Date(this.startDate() as string) : null;
+    const end = this.endDate() ? new Date(this.endDate() as string) : null;
+    return this.records().filter((r) => {
+      if (!start && !end) return true;
+      const created = new Date(r.createdAt);
+      if (start && created < start) return false;
+      if (end) {
+        const endOfDay = new Date(end);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (created > endOfDay) return false;
+      }
+      return true;
+    });
+  });
+
+  readonly showCombined = computed(() => this.router.url.includes('/sales/stats'));
+
+  readonly visibleRecords = computed(() => (this.showCombined() ? this.filteredAllRecords() : this.filteredActiveRecords()));
+    startDate = signal<string | null>(null);
+    endDate = signal<string | null>(null);
   readonly summaryCards = computed(() => {
+    const sourceStats = this.useComputedStats() ? this.computedStats() : this.stats();
+
+    if (this.showCombined()) {
+      return [
+        { label: 'Total Cash', value: Number(sourceStats.totalCash || 0) },
+        { label: 'Cash Sales Revenue', value: Number(sourceStats.revenueCashSales || 0) },
+        { label: 'Paid Invoices Revenue', value: Number(sourceStats.revenuePaidInvoices || 0) },
+        { label: 'Credit Revenue', value: Number(sourceStats.revenueCredits || 0) },
+        { label: 'Pending Invoices', value: Number(sourceStats.openInvoices || 0) },
+      ];
+    }
+
     if (this.activeTab() === 'credit') {
       return [
-        { label: 'Credit Sales', value: this.stats().creditSales },
-        { label: 'Open Invoices', value: this.stats().openInvoices },
-        { label: 'Cleared Invoices', value: this.stats().clearedInvoices },
-        { label: 'Outstanding', value: Number(this.stats().totalOutstanding || 0) },
+        { label: 'Credit Sales', value: sourceStats.creditSales },
+        { label: 'Open Invoices', value: sourceStats.openInvoices },
+        { label: 'Cleared Invoices', value: sourceStats.clearedInvoices },
+        { label: 'Outstanding', value: Number(sourceStats.totalOutstanding || 0) },
       ];
     }
 
     return [
-      { label: 'Cash Sales', value: this.stats().cashSales },
-      { label: 'Collected', value: Number(this.stats().totalCollected || 0) },
-      { label: 'Paid Sales', value: this.stats().paidSales },
-      { label: 'Total Value', value: Number(this.stats().totalValue || 0) },
+      { label: 'Cash Sales', value: sourceStats.cashSales },
+      { label: 'Collected', value: Number(sourceStats.totalCollected || 0) },
+      { label: 'Paid Sales', value: sourceStats.paidSales },
+      { label: 'Total Value', value: Number(sourceStats.totalValue || 0) },
     ];
+  });
+
+  readonly useComputedStats = computed(() => Boolean(this.startDate() || this.endDate()));
+
+  readonly computedStats = computed((): SaleStats => {
+    const recs = (this.startDate() || this.endDate()) ? this.records().filter((r) => {
+      const start = this.startDate() ? new Date(this.startDate() as string) : null;
+      const end = this.endDate() ? new Date(this.endDate() as string) : null;
+      const created = new Date(r.createdAt);
+      if (start && created < start) return false;
+      if (end) {
+        const endOfDay = new Date(end);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (created > endOfDay) return false;
+      }
+      return true;
+    }) : this.records();
+
+    // base aggregates
+    const totalSales = recs.length;
+    const cashSalesCount = recs.filter((r) => r.saleType === 'cash').length;
+    const creditSalesCount = recs.filter((r) => r.saleType === 'credit').length;
+    const paidSalesCount = recs.filter((r) => r.paymentStatus === 'paid').length;
+    const unpaidSalesCount = recs.filter((r) => r.paymentStatus === 'unpaid').length;
+    const partialSalesCount = recs.filter((r) => r.paymentStatus === 'partial').length;
+    const openInvoicesCount = recs.filter((r) => r.invoiceStatus === 'open').length;
+    const clearedInvoicesCount = recs.filter((r) => r.invoiceStatus === 'cleared').length;
+    const totalValue = recs.reduce((s, r) => s + Number(r.subtotal || 0), 0);
+    const totalCollected = recs.reduce((s, r) => s + Number(r.totalPaid || 0), 0);
+    const totalOutstanding = recs.reduce((s, r) => s + Number(r.balanceDue || 0), 0);
+
+    // revenue breakdowns
+    const revenueCashSales = recs.filter((r) => r.saleType === 'cash').reduce((s, r) => s + Number(r.subtotal || 0), 0);
+    const paidInvoices = recs.filter((r) => r.saleType === 'credit' && (r.invoiceStatus === 'cleared' || r.paymentStatus === 'paid'));
+    const revenuePaidInvoices = paidInvoices.reduce((s, r) => s + Number(r.subtotal || 0), 0);
+    const revenueCredits = recs.filter((r) => r.saleType === 'credit').reduce((s, r) => s + Number(r.subtotal || 0), 0);
+
+    // total cash = cash sales subtotal + paid invoices subtotal
+    const totalCash = revenueCashSales + revenuePaidInvoices;
+
+    // payment method breakdown across all recorded payments
+    let bankTotal = 0;
+    let cashTotal = 0;
+    let mpesaTotal = 0;
+    let otherTotal = 0;
+    for (const r of recs) {
+      (r.payments || []).forEach((p) => {
+        const method = (p.method || 'other') as string;
+        if (method === 'bank' || method === 'cash' || method === 'mpesa') {
+          if (method === 'bank') {
+            bankTotal += Number(p.amount || 0);
+          } else if (method === 'cash') {
+            cashTotal += Number(p.amount || 0);
+          } else {
+            mpesaTotal += Number(p.amount || 0);
+          }
+        } else {
+          otherTotal += Number(p.amount || 0);
+        }
+      });
+    }
+
+    const stats: SaleStats = {
+      totalSales,
+      cashSales: cashSalesCount,
+      creditSales: creditSalesCount,
+      paidSales: paidSalesCount,
+      unpaidSales: unpaidSalesCount,
+      partialSales: partialSalesCount,
+      openInvoices: openInvoicesCount,
+      clearedInvoices: clearedInvoicesCount,
+      totalValue,
+      totalCollected,
+      totalOutstanding,
+      totalCash,
+      revenueCashSales,
+      revenuePaidInvoices,
+      revenueCredits,
+      paymentMethodBreakdown: {
+        bank: bankTotal,
+        cash: cashTotal,
+        mpesa: mpesaTotal,
+        other: otherTotal,
+      },
+    };
+
+    return stats;
   });
 
   constructor(

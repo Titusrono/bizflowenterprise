@@ -1,0 +1,75 @@
+<div class="card border border-neutral-200/70 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ mode === 'create' ? 'Create' : 'Edit' }} {{ title }}</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Standardised Kenyan payment details for receipts and records.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body grid grid-cols-1 gap-4">
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Payment name</span>
+      <input class="input-field" formControlName="name" placeholder="M-Pesa Till 123456" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Payment type</span>
+      <select class="input-field" formControlName="providerType">
+        <option value="cash">Cash</option>
+        <option value="mpesa">M-Pesa</option>
+        <option value="till">Till</option>
+        <option value="paybill">Paybill</option>
+        <option value="bank">Bank</option>
+      </select>
+    </label>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'mpesa' || providerTypeValue() === 'till'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Phone number</span>
+        <input class="input-field" formControlName="phoneNumber" placeholder="07XX XXX XXX" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'till'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Till number</span>
+        <input class="input-field" formControlName="tillNumber" placeholder="123456" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'paybill'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Paybill number</span>
+        <input class="input-field" formControlName="paybillNumber" placeholder="123456" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'paybill' || providerTypeValue() === 'bank'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Account number</span>
+        <input class="input-field" formControlName="accountNumber" placeholder="Account number" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'till' || providerTypeValue() === 'paybill'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Account name</span>
+        <input class="input-field" formControlName="accountName" placeholder="Business name" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'bank'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Bank name</span>
+        <input class="input-field" formControlName="bankName" placeholder="Bank name" />
+      </label>
+
+      <label class="space-y-2" *ngIf="providerTypeValue() === 'bank'">
+        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Branch name</span>
+        <input class="input-field" formControlName="branchName" placeholder="Branch name" />
+      </label>
+    </div>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Notes</span>
+      <textarea class="input-field min-h-[6rem]" formControlName="notes" placeholder="Optional receipt/payment notes"></textarea>
+    </label>
+
+    <label class="inline-flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+      <input type="checkbox" formControlName="isDefault" />
+      Set as default payment method
+    </label>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </form>
+</div>

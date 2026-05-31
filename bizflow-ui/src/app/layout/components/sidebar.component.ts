@@ -177,6 +177,7 @@ export class SidebarComponent implements OnInit {
         items: [
           { label: 'Cash Sales', icon: 'bi-cash-stack', route: '/sales', queryParams: { type: 'cash' } },
           { label: 'Credit Sales', icon: 'bi-receipt', route: '/sales', queryParams: { type: 'credit' } },
+          { label: 'Sales Stats', icon: 'bi-pie-chart', route: '/sales/stats' },
         ],
       },
       {
@@ -206,6 +207,8 @@ export class SidebarComponent implements OnInit {
           { label: 'Organizations', icon: 'bi-building', route: '/organizations' },
           { label: 'Branches', icon: 'bi-geo-alt-fill', route: '/branches' },
           { label: 'Users', icon: 'bi-people-fill', route: '/users' },
+          { label: 'Taxes', icon: 'bi-receipt-cutoff', route: '/taxes' },
+          { label: 'Payments', icon: 'bi-wallet2', route: '/payments' },
           { label: 'Settings', icon: 'bi-gear-fill', route: '/settings' },
         ],
       },

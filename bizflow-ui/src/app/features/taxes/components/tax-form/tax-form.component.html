@@ -1,0 +1,22 @@
+<div class="card border border-neutral-200/70 dark:border-neutral-800">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">{{ mode === 'create' ? 'Create' : 'Edit' }} {{ title }}</h2>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">Keep tax names clear and percentages between 0 and 100.</p>
+  </div>
+
+  <form [formGroup]="form" class="card-body grid grid-cols-1 gap-4">
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Tax name</span>
+      <input class="input-field" formControlName="name" placeholder="VAT" />
+    </label>
+
+    <label class="space-y-2">
+      <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Percentage</span>
+      <input class="input-field" formControlName="percentage" type="number" min="0" max="100" step="0.01" placeholder="16" />
+    </label>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" class="btn btn-ghost" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </form>
+</div>

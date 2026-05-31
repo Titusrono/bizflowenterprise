@@ -128,6 +128,7 @@ export class HeaderComponent implements OnInit {
   currentUser = signal<User | null>(null);
   branches = signal<Branch[]>([]);
   selectedBranchId = signal('');
+  selectedOrganizationId = signal('');
   readonly UserRole = UserRole;
 
   constructor(
@@ -143,6 +144,16 @@ export class HeaderComponent implements OnInit {
       this.currentUser.set(user);
       if (user) {
         void this.initializeScope(user);
+      }
+    });
+
+    this.scopeService.selectedOrganizationId$.subscribe((organizationId) => {
+      if (organizationId !== this.selectedOrganizationId()) {
+        this.selectedOrganizationId.set(organizationId);
+        const user = this.currentUser();
+        if (user) {
+          void this.loadBranches(user, organizationId || undefined);
+        }
       }
     });
 
@@ -162,8 +173,9 @@ export class HeaderComponent implements OnInit {
 
   private async initializeScope(user: User): Promise<void> {
     const organizationId = this.scopeService.getSelectedOrganizationId() || user.organizationId || '';
+    this.selectedOrganizationId.set(organizationId);
 
-    await this.loadBranches(user);
+    await this.loadBranches(user, organizationId || undefined);
 
     const branchId = this.scopeService.getSelectedBranchId() || user.branchId || this.branches()[0]?._id || '';
     if (branchId) {
@@ -172,10 +184,12 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  private async loadBranches(user: User): Promise<void> {
+  private async loadBranches(user: User, organizationId?: string): Promise<void> {
     try {
       let branchResponse: Branch[] = [];
-      if (user.role === UserRole.SUPER_ADMIN) {
+      if (organizationId) {
+        branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(organizationId));
+      } else if (user.role === UserRole.SUPER_ADMIN) {
         const response = await firstValueFrom(this.branchesService.getAllBranches(1, 1000));
         branchResponse = response.data;
       } else if (user.organizationId) {

@@ -12,6 +12,8 @@ import { CategoriesModule } from './categories/categories.module';
 import { RestocksModule } from './restocks/restocks.module';
 import { CommonModule } from './common/common.module';
 import { SalesModule } from './sales/sales.module';
+import { TaxesModule } from './taxes/taxes.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -34,7 +36,9 @@ import { SalesModule } from './sales/sales.module';
     BranchesModule,
     CategoriesModule,
     InventoryModule,
+    PaymentsModule,
     RestocksModule,
+    TaxesModule,
     SalesModule,
   ],
   controllers: [AppController],

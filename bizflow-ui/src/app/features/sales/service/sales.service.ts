@@ -57,6 +57,12 @@ export interface SaleStats {
   totalValue: number;
   totalCollected: number;
   totalOutstanding: number;
+  // Extended frontend-only fields for richer breakdowns
+  totalCash?: number; // cash sales subtotal + paid invoices subtotal
+  revenueCashSales?: number; // subtotal from cash sales
+  revenuePaidInvoices?: number; // subtotal from invoices that are paid/cleared
+  revenueCredits?: number; // subtotal from credit invoices (all)
+  paymentMethodBreakdown?: { bank: number; cash: number; mpesa: number; other?: number };
 }
 
 export interface PaginatedResponse<T> {
