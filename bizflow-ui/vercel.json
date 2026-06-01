@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "name": "bizflow-ui",
-  "env": {
-    "ENVIRONMENT_API_URL": "@environment_api_url"
-  },
   "buildCommand": "npm run build",
   "outputDirectory": "dist/bizflow-ui",
   "builds": [
