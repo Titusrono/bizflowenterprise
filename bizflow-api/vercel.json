@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "name": "bizflow-api",
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "DB_NAME": "@db_name",
+    "JWT_SECRET": "@jwt_secret",
+    "JWT_REFRESH_SECRET": "@jwt_refresh_secret",
+    "JWT_EXPIRATION": "@jwt_expiration",
+    "JWT_REFRESH_EXPIRATION": "@jwt_refresh_expiration",
+    "CORS_ORIGIN": "@cors_origin",
+    "NODE_ENV": "production"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js"
+    }
+  ]
+}

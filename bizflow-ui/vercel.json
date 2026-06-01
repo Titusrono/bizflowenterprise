@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "bizflow-ui",
+  "env": {
+    "ENVIRONMENT_API_URL": "@environment_api_url"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/bizflow-ui",
+  "builds": [
+    {
+      "src": "dist/bizflow-ui",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/bizflow-ui/index.html"
+    }
+  ]
+}

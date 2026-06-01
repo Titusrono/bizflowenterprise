@@ -4,13 +4,22 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  // Enable CORS for local development so the UI dev server can call the API
+  
+  // Configure CORS for production and development
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:4200';
+  const corsOriginArray = corsOrigin.includes(',') 
+    ? corsOrigin.split(',').map(origin => origin.trim())
+    : [corsOrigin];
+  
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? true,
+    origin: corsOriginArray,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  console.log(`Server running on port ${port}`);
 }
 bootstrap();
