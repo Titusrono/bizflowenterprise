@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 let app: any;
 
-export default async (req: any, res: any) => {
+async function initializeApp() {
   if (!app) {
-    app = await NestFactory.create(AppModule);
+    app = await NestFactory.create(AppModule, {
+      logger: false,
+    });
     app.setGlobalPrefix('api');
     
     // Configure CORS for production and development
@@ -23,8 +26,16 @@ export default async (req: any, res: any) => {
     
     await app.init();
   }
+  return app;
+}
 
-  // Create Express handler
-  const expressHandler = app.getHttpAdapter().getInstance();
-  expressHandler(req, res);
+export default async (req: VercelRequest, res: VercelResponse) => {
+  try {
+    const nestApp = await initializeApp();
+    const server = nestApp.getHttpAdapter().getInstance();
+    server(req, res);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
