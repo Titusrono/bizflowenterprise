@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install --frozen-lockfile"
+  "buildCommand": "pnpm -F bizflow-api run build",
+  "installCommand": "pnpm install"
 }
