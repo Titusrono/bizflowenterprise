@@ -32,18 +32,23 @@ import { User, UserRole } from '../../core/models';
         </div>
 
         <div class="justify-self-end flex items-center gap-2 md:gap-4">
-          <div class="hidden lg:flex items-center gap-2">
-            <select
-              class="input-field bg-neutral-100 dark:bg-[#141f38] text-neutral-800 dark:text-neutral-100"
-              [value]="selectedBranchId()"
-              [disabled]="isLoadingBranches() || branches().length === 0"
-              (change)="onBranchChange($any($event.target).value)"
-              [attr.aria-label]="isLoadingBranches() ? 'Loading branches...' : 'Select branch'"
-            >
-              <option *ngIf="isLoadingBranches()" value="" disabled>Loading branches...</option>
-              <option *ngIf="!isLoadingBranches() && branches().length === 0" value="" disabled>No branches available</option>
-              <option *ngFor="let branch of branches()" [value]="branch._id">{{ branch.name }}</option>
-            </select>
+          <div class="hidden lg:flex items-center gap-3 px-4 py-2 bg-neutral-100 dark:bg-[#141f38] rounded-lg hover:bg-neutral-200 dark:hover:bg-[#1a2555] transition-colors border border-neutral-200 dark:border-[#1e293b]">
+            <i class="bi bi-building text-neutral-600 dark:text-[#94a3b8] flex-shrink-0"></i>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-neutral-500 dark:text-[#64748b] font-semibold">Branch</label>
+              <select
+                style="padding: 4px 8px; min-width: 150px;"
+                class="text-sm font-semibold bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-neutral-900 dark:text-white cursor-pointer"
+                [value]="selectedBranchId()"
+                [disabled]="isLoadingBranches() || branches().length === 0"
+                (change)="onBranchChange($any($event.target).value)"
+                [attr.aria-label]="isLoadingBranches() ? 'Loading branches...' : 'Select branch'"
+              >
+                <option *ngIf="isLoadingBranches()" value="" disabled selected>Loading...</option>
+                <option *ngIf="!isLoadingBranches() && branches().length === 0" value="" disabled selected>No branches</option>
+                <option *ngFor="let branch of branches()" [value]="branch._id" [selected]="branch._id === selectedBranchId()">{{ branch.name }} ({{ branch.code }})</option>
+              </select>
+            </div>
           </div>
           <button
             type="button"
@@ -209,26 +214,59 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.isLoadingBranches.set(true);
       let branchResponse: Branch[] = [];
 
-      // Determine which endpoint to call based on user role and organization
-      if (organizationId) {
-        // If organization is specified, use it
-        branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(organizationId));
-      } else if (user.role === UserRole.SUPER_ADMIN) {
-        // Super admins can see all branches (paginated)
-        const response = await firstValueFrom(this.branchesService.getAllBranches(1, 1000));
-        branchResponse = response.data;
-      } else if (user.organizationId) {
+      // Use provided organizationId or fall back to user's organization
+      const orgId = organizationId || user.organizationId;
+
+      // eslint-disable-next-line no-console
+      console.log('[Header] Loading branches for org:', orgId, 'User role:', user.role);
+
+      if (!orgId) {
+        // eslint-disable-next-line no-console
+        console.warn('No organization ID available for loading branches');
+        this.branches.set([]);
+        return;
+      }
+
+      // Convert to string if it's an object
+      const orgIdString = typeof orgId === 'string' ? orgId : (orgId as any).toString();
+
+      // Determine which endpoint to call based on user role
+      if (user.role === UserRole.SUPER_ADMIN) {
+        // Super admins can see all branches (paginated) or use specific org endpoint
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[Header] Super admin - calling getActiveBranches with org:', orgIdString);
+          branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(orgIdString));
+          // eslint-disable-next-line no-console
+          console.log('[Header] Super admin branches response:', branchResponse);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log('[Header] Super admin getActiveBranches failed, trying getAllBranches', error);
+          const response = await firstValueFrom(this.branchesService.getAllBranches(1, 1000));
+          branchResponse = response.data;
+          // eslint-disable-next-line no-console
+          console.log('[Header] getAllBranches response:', branchResponse);
+        }
+      } else {
         // Regular users see branches from their organization
-        branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(user.organizationId));
+        // eslint-disable-next-line no-console
+        console.log('[Header] Regular user - calling getActiveBranches with org:', orgIdString);
+        branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(orgIdString));
+        // eslint-disable-next-line no-console
+        console.log('[Header] User branches response:', branchResponse);
       }
 
       this.branches.set(branchResponse);
+      // eslint-disable-next-line no-console
+      console.log('[Header] Branches set to signal. Total:', branchResponse.length);
 
       // Auto-select first branch if none selected and branches exist
       if (!this.selectedBranchId() && this.branches().length > 0) {
         const defaultBranchId = this.branches()[0]._id;
         this.selectedBranchId.set(defaultBranchId);
         this.scopeService.setBranchId(defaultBranchId);
+        // eslint-disable-next-line no-console
+        console.log('[Header] Auto-selected default branch:', defaultBranchId);
       }
     } catch (error) {
       // eslint-disable-next-line no-console

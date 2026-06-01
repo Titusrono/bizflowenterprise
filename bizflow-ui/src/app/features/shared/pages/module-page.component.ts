@@ -1491,7 +1491,11 @@ export class ModulePageComponent implements OnInit {
     return this.moduleKind() === 'users';
   }
 
-  statusClass(status: string): string {
+  statusClass(status: string | undefined): string {
+    if (!status) {
+      return 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
+    }
+    
     const normalized = status.toLowerCase();
     if (normalized === 'active') {
       return 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Branch, BranchDocument } from '../schemas/branch.schema';
 import { BaseRepository } from '../../common/repositories/base.repository';
 
@@ -22,7 +22,7 @@ export class BranchesRepository extends BaseRepository<BranchDocument> {
    */
   async findByOrganization(organizationId: string, page: number = 1, limit: number = 10) {
     return this.findAllPaginated(
-      { organizationId },
+      { organizationId: new Types.ObjectId(organizationId) },
       page,
       limit,
     );
@@ -35,7 +35,7 @@ export class BranchesRepository extends BaseRepository<BranchDocument> {
     return this.model
       .findOne({
         code: code.toUpperCase(),
-        organizationId,
+        organizationId: new Types.ObjectId(organizationId),
         isDeleted: false,
       })
       .lean()
@@ -47,7 +47,7 @@ export class BranchesRepository extends BaseRepository<BranchDocument> {
    */
   async findActiveByOrganization(organizationId: string) {
     return this.find({
-      organizationId,
+      organizationId: new Types.ObjectId(organizationId),
       status: 'active',
     });
   }
@@ -56,7 +56,7 @@ export class BranchesRepository extends BaseRepository<BranchDocument> {
    * Count branches in organization
    */
   async countByOrganization(organizationId: string): Promise<number> {
-    return this.count({ organizationId });
+    return this.count({ organizationId: new Types.ObjectId(organizationId) });
   }
 
   /**
@@ -64,7 +64,7 @@ export class BranchesRepository extends BaseRepository<BranchDocument> {
    */
   async countActiveByOrganization(organizationId: string): Promise<number> {
     return this.count({
-      organizationId,
+      organizationId: new Types.ObjectId(organizationId),
       status: 'active',
     });
   }

@@ -46,7 +46,11 @@ export class BranchesController {
     }
 
     // Regular users can only access their own organization
-    if (user.organizationId !== organizationId) {
+    // Convert both to strings for comparison (handle ObjectId)
+    const userOrgId = user.organizationId?.toString?.() || user.organizationId?.valueOf?.() || String(user.organizationId);
+    const requestedOrgId = organizationId?.toString?.() || String(organizationId);
+
+    if (userOrgId !== requestedOrgId) {
       throw new ForbiddenException(
         `Access denied: You can only access branches from your organization`,
       );
