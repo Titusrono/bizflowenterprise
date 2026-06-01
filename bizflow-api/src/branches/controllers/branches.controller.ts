@@ -12,27 +12,65 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { OrganizationGuard } from '../../auth/guards/organization.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { BranchesService } from '../services/branches.service';
 import { CreateBranchDto, UpdateBranchDto } from '../dto/branch.dto';
+import { UserRole } from '../../users/schemas/user.schema';
 
 @Controller('branches')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, OrganizationGuard)
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 
   /**
+   * Validates that the user has access to the organization
+   */
+  private validateOrganizationAccess(user: any, organizationId?: string): string {
+    // If no organization specified, use user's organization
+    if (!organizationId) {
+      if (!user.organizationId) {
+        throw new BadRequestException('organizationId is required');
+      }
+      return user.organizationId;
+    }
+
+    // Super admin can access any organization
+    if (user.role === UserRole.SUPER_ADMIN) {
+      return organizationId;
+    }
+
+    // Regular users can only access their own organization
+    if (user.organizationId !== organizationId) {
+      throw new ForbiddenException(
+        `Access denied: You can only access branches from your organization`,
+      );
+    }
+
+    return organizationId;
+  }
+
+  /**
    * Create a new branch
+   * Only ADMIN and SUPER_ADMIN can create branches
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async create(
     @Body() createBranchDto: CreateBranchDto,
     @Query('organizationId') organizationId: string,
     @Req() req: any,
   ) {
-    const orgId = organizationId || (createBranchDto as any).organizationId || '';
+    const orgId = this.validateOrganizationAccess(
+      req.user,
+      organizationId || (createBranchDto as any).organizationId,
+    );
     return this.branchesService.createBranch(
       createBranchDto,
       orgId,
@@ -42,9 +80,11 @@ export class BranchesController {
 
   /**
    * Get all branches (paginated)
+   * Non-admin users can only see branches from their organization
    */
   @Get()
   async findAll(
+    @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
@@ -53,14 +93,21 @@ export class BranchesController {
     const limitNum = parseInt(limit) || 10;
 
     let filter: any = {};
+
+    // Non-super-admin users can only see branches from their organization
+    if (req.user.role !== UserRole.SUPER_ADMIN) {
+      if (!req.user.organizationId) {
+        throw new BadRequestException('User organization not set');
+      }
+      filter.organizationId = req.user.organizationId;
+    }
+
     if (search) {
-      filter = {
-        $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { code: { $regex: search, $options: 'i' } },
-          { location: { $regex: search, $options: 'i' } },
-        ],
-      };
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } },
+      ];
     }
 
     return this.branchesService.getAllPaginated(filter, pageNum, limitNum);
@@ -118,7 +165,9 @@ export class BranchesController {
     @Param('organizationId') organizationId: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Req() req: any,
   ) {
+    this.validateOrganizationAccess(req.user, organizationId);
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
     return this.branchesService.getBranchesByOrganization(
@@ -132,7 +181,11 @@ export class BranchesController {
    * Get active branches for organization
    */
   @Get('organization/:organizationId/active')
-  async getActiveBranches(@Param('organizationId') organizationId: string) {
+  async getActiveBranches(
+    @Param('organizationId') organizationId: string,
+    @Req() req: any,
+  ) {
+    this.validateOrganizationAccess(req.user, organizationId);
     return this.branchesService.getActiveBranches(organizationId);
   }
 
@@ -149,8 +202,10 @@ export class BranchesController {
 
   /**
    * Update branch
+   * Only ADMIN and SUPER_ADMIN can update branches
    */
   @Put(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async update(
     @Param('id') id: string,
     @Body() updateBranchDto: UpdateBranchDto,
@@ -165,8 +220,10 @@ export class BranchesController {
 
   /**
    * Delete branch (soft delete)
+   * Only ADMIN and SUPER_ADMIN can delete branches
    */
   @Delete(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async delete(@Param('id') id: string, @Req() req: any) {
     return this.branchesService.softDelete(id, req.user.userId);
   }

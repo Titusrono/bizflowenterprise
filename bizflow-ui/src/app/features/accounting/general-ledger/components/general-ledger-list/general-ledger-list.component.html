@@ -1,0 +1,133 @@
+<div class="space-y-6 p-6">
+  <!-- Header Card -->
+  <div class="card border border-neutral-200/70 dark:border-neutral-800">
+    <div class="card-header flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h2 class="text-2xl font-bold text-neutral-900 dark:text-white">General Ledger</h2>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">View detailed account transactions and running balances.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost" type="button" (click)="loadGLEntries()">Refresh</button>
+        <button class="btn btn-primary" type="button" (click)="getTrialBalance()">View Trial Balance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="card border border-neutral-200/70 dark:border-neutral-800">
+    <div class="card-header">
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Filters</h3>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Account</label>
+          <input 
+            type="text"
+            formControlName="accountId"
+            placeholder="Filter by account..."
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">From Date</label>
+          <input 
+            type="date"
+            formControlName="fromDate"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">To Date</label>
+          <input 
+            type="date"
+            formControlName="toDate"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button
+            type="button"
+            class="btn btn-primary flex-1"
+            (click)="applyFilters()">
+            Filter
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost flex-1"
+            (click)="resetFilters()">
+            Reset
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="card border border-neutral-200/70 dark:border-neutral-800 p-6 text-center">
+    <div class="inline-block">
+      <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Loading entries...</p>
+  </div>
+
+  <!-- General Ledger Table -->
+  <div *ngIf="!loading()" class="card border border-neutral-200/70 dark:border-neutral-800">
+    <div class="card-header flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">General Ledger Entries ({{ total() }})</h3>
+    </div>
+
+    <div *ngIf="!glEntries().length" class="p-6 text-center">
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">No entries found.</p>
+    </div>
+
+    <div *ngIf="glEntries().length" class="overflow-x-auto">
+      <table class="table min-w-full">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Account Code</th>
+            <th>Account Name</th>
+            <th class="text-right">Debit</th>
+            <th class="text-right">Credit</th>
+            <th class="text-right">Balance</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of glEntries()">
+            <td class="text-neutral-600 dark:text-neutral-400">{{ entry.date | date: 'MMM dd, yyyy' }}</td>
+            <td>
+              <div class="font-semibold text-neutral-900 dark:text-white">{{ entry.accountCode }}</div>
+            </td>
+            <td class="text-neutral-600 dark:text-neutral-400">{{ entry.accountName }}</td>
+            <td class="text-right text-neutral-900 dark:text-white">{{ entry.debit | currency }}</td>
+            <td class="text-right text-neutral-900 dark:text-white">{{ entry.credit | currency }}</td>
+            <td class="text-right">
+              <div class="font-semibold text-neutral-900 dark:text-white">{{ entry.balance | currency }}</div>
+            </td>
+            <td class="text-neutral-600 dark:text-neutral-400">{{ entry.reference }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="glEntries().length" class="card-footer flex items-center justify-between border-t border-neutral-200/70 dark:border-neutral-800 px-6 py-4">
+      <span class="text-sm text-neutral-600 dark:text-neutral-400">
+        Page {{ currentPage() }} of {{ Math.ceil(total() / pageSize()) }}
+      </span>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-ghost btn-sm"
+          (click)="previousPage()"
+          [disabled]="currentPage() === 1">
+          Previous
+        </button>
+        <button
+          class="btn btn-ghost btn-sm"
+          (click)="nextPage()"
+          [disabled]="currentPage() * pageSize() >= total()">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

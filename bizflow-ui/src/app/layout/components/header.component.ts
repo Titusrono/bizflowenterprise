@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ScopeService } from '../../core/services/scope.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -35,9 +36,12 @@ import { User, UserRole } from '../../core/models';
             <select
               class="input-field bg-neutral-100 dark:bg-[#141f38] text-neutral-800 dark:text-neutral-100"
               [value]="selectedBranchId()"
+              [disabled]="isLoadingBranches() || branches().length === 0"
               (change)="onBranchChange($any($event.target).value)"
+              [attr.aria-label]="isLoadingBranches() ? 'Loading branches...' : 'Select branch'"
             >
-              <option *ngIf="branches().length === 0" value="" disabled>No branches available</option>
+              <option *ngIf="isLoadingBranches()" value="" disabled>Loading branches...</option>
+              <option *ngIf="!isLoadingBranches() && branches().length === 0" value="" disabled>No branches available</option>
               <option *ngFor="let branch of branches()" [value]="branch._id">{{ branch.name }}</option>
             </select>
           </div>
@@ -120,7 +124,7 @@ import { User, UserRole } from '../../core/models';
   `,
   styles: [],
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   pageTitle = signal('Dashboard');
   notifications = signal(3);
   messages = signal(2);
@@ -129,7 +133,10 @@ export class HeaderComponent implements OnInit {
   branches = signal<Branch[]>([]);
   selectedBranchId = signal('');
   selectedOrganizationId = signal('');
+  isLoadingBranches = signal(false);
   readonly UserRole = UserRole;
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
@@ -140,35 +147,48 @@ export class HeaderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe((user) => {
-      this.currentUser.set(user);
-      if (user) {
-        void this.initializeScope(user);
-      }
-    });
-
-    this.scopeService.selectedOrganizationId$.subscribe((organizationId) => {
-      if (organizationId !== this.selectedOrganizationId()) {
-        this.selectedOrganizationId.set(organizationId);
-        const user = this.currentUser();
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((user) => {
+        this.currentUser.set(user);
         if (user) {
-          void this.loadBranches(user, organizationId || undefined);
+          void this.initializeScope(user);
         }
-      }
-    });
+      });
 
-    this.scopeService.selectedBranchId$.subscribe((branchId) => {
-      if (branchId && branchId !== this.selectedBranchId()) {
-        this.selectedBranchId.set(branchId);
-      }
-    });
+    this.scopeService.selectedOrganizationId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((organizationId) => {
+        if (organizationId !== this.selectedOrganizationId()) {
+          this.selectedOrganizationId.set(organizationId);
+          const user = this.currentUser();
+          if (user) {
+            void this.loadBranches(user, organizationId || undefined);
+          }
+        }
+      });
+
+    this.scopeService.selectedBranchId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((branchId) => {
+        if (branchId && branchId !== this.selectedBranchId()) {
+          this.selectedBranchId.set(branchId);
+        }
+      });
 
     this.updatePageTitle();
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationEnd) {
-        this.updatePageTitle();
-      }
-    });
+    this.router.events
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd) {
+          this.updatePageTitle();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private async initializeScope(user: User): Promise<void> {
@@ -186,23 +206,36 @@ export class HeaderComponent implements OnInit {
 
   private async loadBranches(user: User, organizationId?: string): Promise<void> {
     try {
+      this.isLoadingBranches.set(true);
       let branchResponse: Branch[] = [];
+
+      // Determine which endpoint to call based on user role and organization
       if (organizationId) {
+        // If organization is specified, use it
         branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(organizationId));
       } else if (user.role === UserRole.SUPER_ADMIN) {
+        // Super admins can see all branches (paginated)
         const response = await firstValueFrom(this.branchesService.getAllBranches(1, 1000));
         branchResponse = response.data;
       } else if (user.organizationId) {
+        // Regular users see branches from their organization
         branchResponse = await firstValueFrom(this.branchesService.getActiveBranches(user.organizationId));
       }
 
       this.branches.set(branchResponse);
-      if (!this.selectedBranchId() && this.branches().length) {
-        this.selectedBranchId.set(this.branches()[0]._id);
-        this.scopeService.setBranchId(this.branches()[0]._id);
+
+      // Auto-select first branch if none selected and branches exist
+      if (!this.selectedBranchId() && this.branches().length > 0) {
+        const defaultBranchId = this.branches()[0]._id;
+        this.selectedBranchId.set(defaultBranchId);
+        this.scopeService.setBranchId(defaultBranchId);
       }
-    } catch {
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error loading branches:', error);
       this.branches.set([]);
+    } finally {
+      this.isLoadingBranches.set(false);
     }
   }
 

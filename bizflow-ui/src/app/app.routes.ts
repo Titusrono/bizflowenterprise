@@ -179,6 +179,10 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'accounting',
+        loadChildren: () => import('./features/accounting/accounting.module').then(m => m.AccountingModule),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

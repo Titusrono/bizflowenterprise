@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from '../../users/schemas/user.schema';
+import { User, UserDocument, UserRole } from '../../users/schemas/user.schema';
 import { RegisterDto, LoginDto, ChangePasswordDto } from '../dto/auth.dto';
 import { DocumentStatus } from '../../common/schemas/base.schema';
 
@@ -46,7 +46,7 @@ export class AuthService {
       firstName,
       lastName,
       organizationId,
-      role: 'admin',
+      role: UserRole.ADMIN,
       status: DocumentStatus.ACTIVE,
       emailVerified: false,
     });

@@ -5,7 +5,7 @@ import { BranchesRepository } from './branches/repositories/branches.repository'
 import { UsersRepository } from './users/repositories/users.repository';
 import { Types } from 'mongoose';
 import { DocumentStatus } from './common/schemas/base.schema';
-import { UserDocument } from './users/schemas/user.schema';
+import { UserDocument, UserRole } from './users/schemas/user.schema';
 import { OrganizationDocument } from './organizations/schemas/organization.schema';
 import { BranchDocument } from './branches/schemas/branch.schema';
 import * as bcrypt from 'bcrypt';
@@ -43,7 +43,7 @@ async function initialize() {
       lastName: 'Admin',
       password: hashedPassword,
       phone: '+1234567890',
-      role: 'super_admin',
+      role: UserRole.SUPER_ADMIN,
       status: DocumentStatus.ACTIVE,
       emailVerified: true,
       organizationId: new Types.ObjectId(seededOrganizationId),
@@ -54,7 +54,7 @@ async function initialize() {
       lastName: 'Admin',
       password: hashedPassword,
       phone: '+1234567890',
-      role: 'super_admin',
+      role: UserRole.SUPER_ADMIN,
       status: DocumentStatus.ACTIVE,
       emailVerified: true,
       organizationId: new Types.ObjectId(seededOrganizationId),

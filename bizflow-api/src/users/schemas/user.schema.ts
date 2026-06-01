@@ -8,6 +8,16 @@ import {
 export type UserDocument = User & Document;
 
 /**
+ * User Roles Enum
+ */
+export enum UserRole {
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  MANAGER = 'manager',
+  USER = 'user',
+}
+
+/**
  * User Schema
  * Extends BaseDocument for common fields (timestamps, soft delete, audit trail)
  */
@@ -45,11 +55,11 @@ export class User extends BaseDocument {
 
   @Prop({
     type: String,
-    enum: ['super_admin', 'admin', 'manager', 'user'],
-    default: 'user',
+    enum: Object.values(UserRole),
+    default: UserRole.USER,
     index: true,
   })
-  role: 'super_admin' | 'admin' | 'manager' | 'user' = 'user';
+  role: UserRole = UserRole.USER;
 
   @Prop({
     enum: DocumentStatus,

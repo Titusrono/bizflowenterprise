@@ -147,7 +147,7 @@ export class SidebarComponent implements OnInit {
   sidebarOpen = signal(false);
   navigationItems = signal<NavItem[]>([]);
   navigationGroups = signal<NavGroup[]>([]);
-  openGroups = signal<Record<string, boolean>>({ inventory: false, sales: false, reports: false, purchases: false, administration: false });
+  openGroups = signal<Record<string, boolean>>({ inventory: false, sales: false, reports: false, purchases: false, administration: false, accounting: false });
   currentUser = signal<User | null>(null);
   private activeRoute = signal<string>('');
 
@@ -207,6 +207,17 @@ export class SidebarComponent implements OnInit {
           { label: 'Inventory', icon: 'bi-box-seam', route: '/inventory' },
           { label: 'Restocks', icon: 'bi-arrow-repeat', route: '/restocks' },
           { label: 'Categories', icon: 'bi-tags-fill', route: '/categories' },
+        ],
+      },
+      {
+        label: 'Accounting',
+        icon: 'bi-calculator',
+        key: 'accounting',
+        items: [
+          { label: 'Chart of Accounts', icon: 'bi-diagram-2', route: '/accounting/chart-of-accounts' },
+          { label: 'Journals', icon: 'bi-journal-text', route: '/accounting/journals' },
+          { label: 'General Ledger', icon: 'bi-book-half', route: '/accounting/general-ledger' },
+          { label: 'Trial Balance', icon: 'bi-file-earmark-spreadsheet', route: '/accounting/trial-balance' },
         ],
       },
       {

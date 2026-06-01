@@ -19,6 +19,9 @@ import { CustomersModule } from './customers/customers.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { BillsModule } from './bills/bills.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { ChartOfAccountsModule } from './chart-of-accounts/chart-of-accounts.module';
+import { JournalsModule } from './journals/journals.module';
+import { GeneralLedgerModule } from './general-ledger/general-ledger.module';
 
 @Module({
   imports: [
@@ -50,6 +53,9 @@ import { ExpensesModule } from './expenses/expenses.module';
     BillsModule,
     ExpensesModule,
     SalesModule,
+    ChartOfAccountsModule,
+    JournalsModule,
+    GeneralLedgerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

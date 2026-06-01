@@ -1,0 +1,144 @@
+<!-- Modal Overlay -->
+<div 
+  *ngIf="isVisible" 
+  class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <!-- Modal Card -->
+  <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-neutral-200/70 dark:border-neutral-800 my-auto">
+    <!-- Modal Header -->
+    <div class="sticky top-0 flex items-center justify-between border-b border-neutral-200/70 dark:border-neutral-800 px-6 py-4 bg-white dark:bg-neutral-900 z-10">
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">
+        {{ editingId ? 'Edit Journal' : 'Create New Journal' }}
+      </h3>
+      <button 
+        type="button" 
+        (click)="cancel()"
+        class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 text-2xl leading-none">
+        ×
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <form [formGroup]="form" (ngSubmit)="saveJournal()" class="p-6">
+      <!-- Journal Type & Date -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Journal Type *</label>
+          <select 
+            formControlName="journalType"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option *ngFor="let type of journalTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Journal Date *</label>
+          <input 
+            type="date"
+            formControlName="journalDate"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+      </div>
+
+      <!-- Reference Number & Type -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Reference Number</label>
+          <input 
+            type="text"
+            formControlName="referenceNumber"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Reference Type</label>
+          <input 
+            type="text"
+            formControlName="referenceType"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+      </div>
+
+      <!-- Narration -->
+      <div class="mb-6">
+        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Narration</label>
+        <textarea 
+          formControlName="narration"
+          rows="2"
+          class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full"></textarea>
+      </div>
+
+      <!-- Line Items -->
+      <div class="mb-6 pb-6 border-b border-neutral-200/70 dark:border-neutral-800">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-sm font-semibold text-neutral-900 dark:text-white">Journal Entries</h4>
+          <button 
+            type="button" 
+            class="btn btn-ghost btn-sm"
+            (click)="addLineItem()">
+            + Add Entry
+          </button>
+        </div>
+        
+        <div *ngIf="lineItems.controls.length === 0" class="p-4 text-center bg-neutral-50 dark:bg-neutral-800/50 rounded-md">
+          <p class="text-sm text-neutral-600 dark:text-neutral-400">No entries added yet. Click "Add Entry" to begin.</p>
+        </div>
+
+        <div *ngFor="let item of lineItems.controls; let i = index" class="mb-4 p-4 border border-neutral-200/70 dark:border-neutral-700 rounded-md" [formGroup]="$any(item)">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <div class="flex flex-col md:col-span-2">
+              <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Account Code *</label>
+              <select 
+                formControlName="accountCode"
+                class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">Select Account</option>
+                <option *ngFor="let acc of activeAccounts()" [value]="acc.accountCode">
+                  {{ acc.accountCode }} - {{ acc.name }}
+                </option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Debit</label>
+              <input 
+                type="number"
+                formControlName="debit"
+                min="0"
+                class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            </div>
+            <div class="flex items-end gap-2">
+              <div class="flex flex-col flex-1">
+                <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Credit</label>
+                <input 
+                  type="number"
+                  formControlName="credit"
+                  min="0"
+                  class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <button 
+                type="button"
+                class="btn btn-danger btn-sm"
+                (click)="removeLineItem(i)">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 justify-end">
+        <button 
+          type="button" 
+          (click)="cancel()"
+          class="btn btn-ghost">
+          Cancel
+        </button>
+        <button 
+          type="submit"
+          [disabled]="!form.valid || submitting()"
+          class="btn btn-primary">
+          {{ submitting() ? 'Saving...' : (editingId ? 'Update Journal' : 'Create Journal') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+<!-- Modal Overlay -->
+<div 
+  *ngIf="isVisible" 
+  class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <!-- Modal Card -->
+  <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-neutral-200/70 dark:border-neutral-800 my-auto">
+    <!-- Modal Header -->
+    <div class="sticky top-0 flex items-center justify-between border-b border-neutral-200/70 dark:border-neutral-800 px-6 py-4 bg-white dark:bg-neutral-900 z-10">
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">
+        {{ editingId ? 'Edit Account' : 'Create New Account' }}
+      </h3>
+      <button 
+        type="button" 
+        (click)="cancel()"
+        class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 text-2xl leading-none">
+        ×
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <form [formGroup]="form" (ngSubmit)="saveAccount()" class="p-6">
+      <!-- Account Code & Name -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Account Code *</label>
+          <input
+            type="text"
+            formControlName="accountCode"
+            placeholder="e.g., 1010"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <span *ngIf="form.get('accountCode')?.hasError('required') && form.get('accountCode')?.touched" class="text-xs text-red-500 mt-1">
+            Account code is required
+          </span>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Account Name *</label>
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="e.g., Cash in Bank"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <span *ngIf="form.get('name')?.hasError('required') && form.get('name')?.touched" class="text-xs text-red-500 mt-1">
+            Account name is required
+          </span>
+        </div>
+      </div>
+
+      <!-- Account Type & Normal Balance -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Account Type *</label>
+          <select 
+            formControlName="accountType"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option *ngFor="let type of accountTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Normal Balance *</label>
+          <select 
+            formControlName="normalBalance"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option *ngFor="let balance of normalBalances" [value]="balance">
+              {{ balance }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sub Category & Parent Code -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Sub Category</label>
+          <input
+            type="text"
+            formControlName="subCategory"
+            placeholder="e.g., Current Asset"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Parent Code</label>
+          <input
+            type="text"
+            formControlName="parentCode"
+            placeholder="e.g., 1000"
+            class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Description</label>
+        <textarea
+          formControlName="description"
+          rows="3"
+          placeholder="Account description..."
+          class="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full"></textarea>
+      </div>
+
+      <!-- Checkboxes -->
+      <div class="flex items-center gap-6 mb-6">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            formControlName="isHeader"
+            class="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-primary-500 focus:ring-primary-500" />
+          <span class="text-sm text-neutral-700 dark:text-neutral-300">Is Header Account</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-primary-500 focus:ring-primary-500" />
+          <span class="text-sm text-neutral-700 dark:text-neutral-300">Is Active</span>
+        </label>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 justify-end border-t border-neutral-200/70 dark:border-neutral-800 pt-4">
+        <button 
+          type="button" 
+          (click)="cancel()"
+          class="btn btn-ghost">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          [disabled]="!form.valid || submitting()"
+          class="btn btn-primary">
+          {{ submitting() ? 'Saving...' : (editingId ? 'Update Account' : 'Create Account') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
