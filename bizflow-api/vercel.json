@@ -1,5 +1,4 @@
 {
   "version": 2,
-  "installCommand": "pnpm install",
-  "buildCommand": "pnpm -F bizflow-api run build"
+  "public": false
 }
